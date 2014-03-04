@@ -1,4 +1,0 @@
-Funpiling
-=========
-
-Proyecto de Compiladores
