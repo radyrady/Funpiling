@@ -208,17 +208,11 @@ def p_error(p):
 # Build the parser
 parser = yacc.yacc()
 
-s = '''
-    int d;
 
-    int luis(int lol, float damn){
-       k = 6;
-    }
-    
-    int main{
-         l_0_9 = 5;
-    }
-'''
+# Test sections. Input is given through a .txt file
+f = open("Prueba.txt")
+datos = f.read()
+print(datos)
 
-result = parser.parse(s)
+result = parser.parse(datos)
 

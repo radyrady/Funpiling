@@ -1,0 +1,9 @@
+int d;
+
+int luis(int lol, float damn){
+    k = 6;
+}
+
+int main{
+	l_0_9 = 5;
+}
