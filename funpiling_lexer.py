@@ -1,8 +1,22 @@
+#-----------------------------------
+# Jose Miguel Rady  920096
+# Luis Ordaz        919790
+#-----------------------------------
+# Orientacion obtenida de la documentacion oficial de python
+# http://www.dabeaz.com/ply/example.html
+
+# Importa el modulo de PLY a ser utilizado para generar el analizador
+# lexico
 import ply.lex as lex
 
+# --------------------Analizador Lexico-------------------------
+# Lista de las palabras reservadas para el lenguaje
+# Empleadas de esta forma como indicado por el tutorial para
+# optimizar
 reserved = {'main':'MAIN', 'if':'IF', 'else':'ELSE', 'print':'PRINT','int':'INTEGER_ID', 'float':'FLOAT_ID', 'string':'STRING_ID','id':'ID','while':'WHILE'}
 
-# List of token names.   This is always required
+# Lista de los nombres de los diferentes tokens (elementos terminales)
+# Inclusion del grupo de palabras reservadas descrito previamente
 tokens = [
    'PLUS',
    'MINUS',
@@ -25,7 +39,7 @@ tokens = [
 ]+list(reserved.values())
 
 
-# Regular expression rules for simple tokens
+# Expresiones regulares para los tokens simples
 t_PLUS    = r'\+'
 t_MINUS   = r'-'
 t_TIMES   = r'\*'
@@ -42,7 +56,8 @@ t_RBRACE = r'\}'
 t_EQUAL = r'\='
 t_SAME = r'\=='
 
-
+# Expresiones regulares para los tokens simples que incluyen
+# acciones a ser realizadas
 def t_ID(t):
     r'[A-z][A-z|0-9|\_A-z|\_0-9]*'
     t.type = reserved.get(t.value,'ID')
@@ -53,7 +68,6 @@ def t_FLOAT(t):
     t.value = float(t.value)
     return t
 
-# A regular expression rule with some action code
 def t_INTEGER(t):
     r'[\-\+]?[0-9]+'
     t.value = int(t.value)    
@@ -68,18 +82,19 @@ def t_newline(t):
     r'\n+'
     t.lexer.lineno += len(t.value)
 
-# A string containing ignored characters (spaces and tabs)
+# Caracteres que son ignorados: espacios y tabs
 t_ignore  = ' \t'
 
-# Error handling rule
+# Regla para el manejo de errores para identificar aquellos
+# elementos que no pertenezcan al lexico
 def t_error(t):
     print("Illegal character '%s'" % t.value[0])
     t.lexer.skip(1)
 
-# Build the lexer
+# Creacion del analizador lexico que provee el modulo PLY
 lexer = lex.lex()
 
-# Test it out
+# Seccion para realizar pruebas al analizador lexico
 data = '''
     int d;
 
@@ -92,9 +107,10 @@ data = '''
     }
 '''
 
-# Give the lexer some input
+# Dado cierto input
 lexer.input(data)
-# Tokenize
+
+# Tokenizacion
 while True:
     tok = lexer.token()
     if not tok: break      # No more input

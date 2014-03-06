@@ -1,11 +1,18 @@
-# Yacc example
+#-----------------------------------
+# Jose Miguel Rady  920096
+# Luis Ordaz        919790
+#-----------------------------------
+# Orientacion obtenida de la documentacion oficial de python
+# http://www.dabeaz.com/ply/example.html
 
+# Importa el modulo de PLY a ser utilizado para generar el analizador
+# sintactico (parser)
 import ply.yacc as yacc
 
-# Get the token map from the lexer.  This is required.
+# Importa los tokens generados por el analizador lexico (Esto es requerido)
 from funpiling_lexer import tokens
 
-# Declaring our dataStruct Dictionary
+# Declaracion de nuestra estructura de datos Dictionary
 proc_name_list = []
 proc_dictionary = {}
 proc_vars = {}
@@ -13,6 +20,10 @@ proc_vars_type = []
 proc_vars_final = {}
 proc_datos={}
 
+# --------------------Analizador Sintactico-------------------------
+# Declaraciones de las diferentes reglas empleadas para generar las
+# diferentes producciones del lenguaje. La primera produccion debe ser
+# aquella considerada como la produccion inicial
 def p_programa(p):
     '''programa : tipo MAIN seen_Programa bloque
                 | programa_vars seen_Vars programa_funcion seen_Funcion tipo MAIN seen_Programa bloque
@@ -201,18 +212,19 @@ def p_factor_sign(p):
                   | empty
     '''
 
-# Error rule for syntax errors
+# Regla sintactica que identifica un error de sintaxis
 def p_error(p):
     print("Syntax error in input!")
 
-# Build the parser
+# Creacion del parser en relacion a las reglas sintacticas generadas
+# y a los tokens creados por medio del analizador lexico
 parser = yacc.yacc()
 
 
-# Test sections. Input is given through a .txt file
+# Seccion de pruebas obteniendo como entrada un archivo de texto
 f = open("Prueba.txt")
 datos = f.read()
 print(datos)
 
+# Aplicacion del analizador lexico y sintactico a la entrada
 result = parser.parse(datos)
-
