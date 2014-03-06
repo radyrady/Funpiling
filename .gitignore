@@ -4,3 +4,7 @@ parser.out
 *.pyc
 
 parsetab.py
+
+ply-3.4/ANNOUNCE
+
+ply-3.4/CHANGES
