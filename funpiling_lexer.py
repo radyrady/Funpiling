@@ -13,7 +13,7 @@ import ply.lex as lex
 # Lista de las palabras reservadas para el lenguaje
 # Empleadas de esta forma como indicado por el tutorial para
 # optimizar
-reserved = {'main':'MAIN', 'if':'IF', 'else':'ELSE', 'print':'PRINT','int':'INTEGER_ID', 'float':'FLOAT_ID', 'string':'STRING_ID','id':'ID','while':'WHILE'}
+reserved = {'main':'MAIN', 'if':'IF', 'else':'ELSE', 'print':'PRINT','int':'INTEGER_ID', 'float':'FLOAT_ID', 'string':'STRING_ID','id':'ID','while':'WHILE','var':'VAR','void':'VOID'}
 
 # Lista de los nombres de los diferentes tokens (elementos terminales)
 # Inclusion del grupo de palabras reservadas descrito previamente
@@ -36,6 +36,7 @@ tokens = [
    'RBRACE',
    'EQUAL',
    'SAME',
+   'COLON'
 ]+list(reserved.values())
 
 
@@ -55,6 +56,7 @@ t_LBRACE = r'\{'
 t_RBRACE = r'\}'
 t_EQUAL = r'\='
 t_SAME = r'\=='
+t_COLON = r'\:'
 
 # Expresiones regulares para los tokens simples que incluyen
 # acciones a ser realizadas
@@ -94,25 +96,10 @@ def t_error(t):
 # Creacion del analizador lexico que provee el modulo PLY
 lexer = lex.lex()
 
-# Seccion para realizar pruebas al analizador lexico
-data = '''
-    int d;
-
-    int luis(int lol, float damn){
-       k = 6;
-    }
-    
-    int main{
-         l_0_9 = 5;
-    }
-'''
-
-# Dado cierto input
-lexer.input(data)
 
 # Tokenizacion
-while True:
-    tok = lexer.token()
-    if not tok: break      # No more input
-    print(tok)
+#while True:
+#    tok = lexer.token()
+#    if not tok: break      # No more input
+#    print(tok)
 

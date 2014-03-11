@@ -1,9 +1,18 @@
-int d;
+var una, dos, tres: int;
 
-int luis(int lol, float damn){
-    k = 6;
+int func(){
+	var loolh: int;
 }
 
-int main{
+int func1(){
+	h = 4;
+}
+
+int func2(){
+	h = 4;
+}
+
+void main{
 	l_0_9 = 5;
+	var nueva1,nueva2: float;
 }

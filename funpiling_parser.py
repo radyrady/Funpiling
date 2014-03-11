@@ -7,51 +7,78 @@
 
 # Importa el modulo de PLY a ser utilizado para generar el analizador
 # sintactico (parser)
+import logging
 import ply.yacc as yacc
 
 # Importa los tokens generados por el analizador lexico (Esto es requerido)
 from funpiling_lexer import tokens
 
 # Declaracion de nuestra estructura de datos Dictionary
-proc_name_list = []
-proc_dictionary = {}
-proc_vars = {}
-proc_vars_type = []
-proc_vars_final = {}
-proc_datos={}
+directorio_raiz_procedimientos = {}
+directorio_variables_de_procs = {}
+variables_actuales = []
 
 # --------------------Analizador Sintactico-------------------------
 # Declaraciones de las diferentes reglas empleadas para generar las
 # diferentes producciones del lenguaje. La primera produccion debe ser
 # aquella considerada como la produccion inicial
+
+
+
 def p_programa(p):
-    '''programa : tipo MAIN seen_Programa bloque
-                | programa_vars seen_Vars programa_funcion seen_Funcion tipo MAIN seen_Programa bloque
+    '''programa : vars_main seen_Vars_Main funcion VOID MAIN bloque seen_Programa 
     '''
 
 def p_seen_Programa(p):
     'seen_Programa : '
-    print("ENTRO AQUI MAIN SOLO")
-
+    #print(p[-1])
+    global directorio_raiz_procedimientos
+    global directorio_variables_de_procs
+    directorio_raiz_procedimientos['main'] = {'locales': directorio_variables_de_procs}
+    directorio_raiz_procedimientos['main']['globales'] = directorio_raiz_procedimientos['globals'] 
+    directorio_variables_de_procs = {}
     
-def p_programa_vars(p):
+def p_vars_main(p):
     '''
-      programa_vars : vars
+      vars_main : vars vars_main
+                | empty
     '''
+
 def p_seen_Vars(p):
     'seen_Vars : '
-    print("ENTRO AQUI VARS")
+    global variables_actuales
+    #print(p[-1])
+    variables_actuales.append(p[-1])
+    
 
+def p_seen_Vars_Main(p):
+    'seen_Vars_Main : '
+    #print("ENTRO AQUI VARS MAIN")
+    global directorio_raiz_procedimientos
+    global directorio_variables_de_procs
+    directorio_raiz_procedimientos['globals'] = directorio_variables_de_procs
+    directorio_variables_de_procs = {}
 
-def p_programa_funcion(p):
-    '''
-      programa_funcion : funcion
-    '''
+def p_seen_Tipo(p):
+    'seen_Tipo : '
+    if p[-2] is ':':
+        global directorio_variables_de_procs
+        global variables_actuales
+        #print(p[-1])
+        directorio_variables_de_procs[p[-1]] = {'variables':variables_actuales}
+        #print(directorio_variables_de_procs)
+        variables_actuales = []
 
 def p_seen_Funcion(p):
     'seen_Funcion : '
-    print("ENTRO AQUI FUNCION")
-
+    #print(directorio_variables_de_procs)
+    #print(p[-5])
+    global directorio_raiz_procedimientos
+    global directorio_variables_de_procs
+    directorio_raiz_procedimientos[p[-5]] = {'locales': directorio_variables_de_procs}
+    directorio_raiz_procedimientos[p[-5]]['globales'] = directorio_raiz_procedimientos['globals'] 
+    directorio_variables_de_procs = {}
+    #print("ENTRO AQUI FUNCION")
 
 def p_empty(p):
     'empty : '
@@ -80,7 +107,8 @@ def p_estatuto(p):
 
 def p_funcion(p):
     '''
-      funcion : tipo ID LPARENTH vars_funcion RPARENTH bloque
+      funcion : tipo ID LPARENTH vars_funcion RPARENTH bloque seen_Funcion funcion
+              | empty
     '''
 
 def p_vars_funcion(p):
@@ -146,20 +174,21 @@ def p_escritura_expresion_aux(p):
 
 def p_vars(p):
     '''
-      vars : tipo ID vars_aux DEL
+      vars : VAR ID seen_Vars vars_aux COLON tipo DEL
+      
     '''
 
 def p_vars_aux(p):
     '''
-      vars_aux : COMMA ID vars_aux
+      vars_aux : COMMA ID seen_Vars vars_aux
                | empty
     '''
 
 def p_tipo(p):
     '''
-      tipo : INTEGER_ID
-           | FLOAT_ID
-           | STRING_ID
+      tipo : INTEGER_ID seen_Tipo
+           | FLOAT_ID seen_Tipo
+           | STRING_ID seen_Tipo
     '''
 
 def p_expresion(p):
@@ -218,7 +247,7 @@ def p_error(p):
 
 # Creacion del parser en relacion a las reglas sintacticas generadas
 # y a los tokens creados por medio del analizador lexico
-parser = yacc.yacc()
+parser = yacc.yacc(debug=True)
 
 
 # Seccion de pruebas obteniendo como entrada un archivo de texto
@@ -227,4 +256,7 @@ datos = f.read()
 print(datos)
 
 # Aplicacion del analizador lexico y sintactico a la entrada
-result = parser.parse(datos)
+logging.basicConfig(filename='example.log',level=logging.INFO)
+log = logging.getLogger('example.log')
+result = parser.parse(datos,debug=log)
+print(directorio_raiz_procedimientos)
