@@ -13,72 +13,70 @@ import ply.yacc as yacc
 # Importa los tokens generados por el analizador lexico (Esto es requerido)
 from funpiling_lexer import tokens
 
-# Declaracion de nuestra estructura de datos Dictionary
-directorio_raiz_procedimientos = {}
-directorio_variables_de_procs = {}
-variables_actuales = []
+# Declaracion de nuestras estructuras de datos 
+directorio_raiz_procedimientos = {} # Diccionario
+directorio_variables_de_procs = {} # Diccionario
+variables_actuales = [] # Lista
 
 # --------------------Analizador Sintactico-------------------------
 # Declaraciones de las diferentes reglas empleadas para generar las
 # diferentes producciones del lenguaje. La primera produccion debe ser
 # aquella considerada como la produccion inicial
 
-
-
 def p_programa(p):
-    '''programa : vars_main seen_Vars_Main funcion VOID MAIN bloque seen_Programa 
+    '''programa : vars_globales seen_Vars_Globales funcion VOID MAIN bloque seen_Programa 
     '''
 
+# Regla que permite actualizar el directorio de variables locales del main en
+# el diccionario raiz de procedimientos y agregarle una referencia a las variables globales
 def p_seen_Programa(p):
     'seen_Programa : '
-    #print(p[-1])
     global directorio_raiz_procedimientos
     global directorio_variables_de_procs
     directorio_raiz_procedimientos['main'] = {'locales': directorio_variables_de_procs}
-    directorio_raiz_procedimientos['main']['globales'] = directorio_raiz_procedimientos['globals'] 
+    directorio_raiz_procedimientos['main']['referencia_Globales'] = directorio_raiz_procedimientos['globales'] 
     directorio_variables_de_procs = {}
     
-def p_vars_main(p):
+def p_vars_globales(p):
     '''
-      vars_main : vars vars_main
+      vars_globales : vars vars_globales
                 | empty
     '''
-
+# Regla que permite actualizar las variables actuales ya se en el contexto
+# global, de una funcion o del main al actualizar la lista de variables actuales
 def p_seen_Vars(p):
     'seen_Vars : '
     global variables_actuales
-    #print(p[-1])
     variables_actuales.append(p[-1])
     
-
-def p_seen_Vars_Main(p):
-    'seen_Vars_Main : '
-    #print("ENTRO AQUI VARS MAIN")
+# Regla que permite actualizar el directorio de variables globales en el diccionario
+# raiz de procedimientos
+def p_seen_Vars_Globales(p):
+    'seen_Vars_Globales : '
     global directorio_raiz_procedimientos
     global directorio_variables_de_procs
-    directorio_raiz_procedimientos['globals'] = directorio_variables_de_procs
+    directorio_raiz_procedimientos['globales'] = directorio_variables_de_procs
     directorio_variables_de_procs = {}
 
+# Regla que identifica a todas las variables de un determinado tipo y actualiza
+# el diccionario de las variables del procedimiento
 def p_seen_Tipo(p):
     'seen_Tipo : '
     if p[-2] is ':':
         global directorio_variables_de_procs
         global variables_actuales
-        #print(p[-1])
         directorio_variables_de_procs[p[-1]] = {'variables':variables_actuales}
-        #print(directorio_variables_de_procs)
         variables_actuales = []
 
+# Regla que permite actualizar el directorio de variables locales de cada funcion en
+# el diccionario raiz de procedimientos y agregarle una referencia a las variables globales
 def p_seen_Funcion(p):
     'seen_Funcion : '
-    #print(directorio_variables_de_procs)
-    #print(p[-5])
     global directorio_raiz_procedimientos
     global directorio_variables_de_procs
     directorio_raiz_procedimientos[p[-5]] = {'locales': directorio_variables_de_procs}
-    directorio_raiz_procedimientos[p[-5]]['globales'] = directorio_raiz_procedimientos['globals'] 
+    directorio_raiz_procedimientos[p[-5]]['referencia_Globales'] = directorio_raiz_procedimientos['globales'] 
     directorio_variables_de_procs = {}
-    #print("ENTRO AQUI FUNCION")
 
 def p_empty(p):
     'empty : '
@@ -259,4 +257,15 @@ print(datos)
 logging.basicConfig(filename='example.log',level=logging.INFO)
 log = logging.getLogger('example.log')
 result = parser.parse(datos,debug=log)
-print(directorio_raiz_procedimientos)
+
+print()
+print("----------------------------------------------------")
+print("||    Contenidos de nuestras tablas de simbolos   ||")
+print("----------------------------------------------------")
+print()
+
+for x in directorio_raiz_procedimientos:
+    print (x)
+    for y in directorio_raiz_procedimientos[x]:
+        print (y,':',directorio_raiz_procedimientos[x][y])
+    print("------------------")
