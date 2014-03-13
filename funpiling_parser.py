@@ -17,6 +17,7 @@ from funpiling_lexer import tokens
 directorio_raiz_procedimientos = {} # Diccionario
 directorio_variables_de_procs = {} # Diccionario
 variables_actuales = [] # Lista
+variablesTemporales = ""
 
 # --------------------Analizador Sintactico-------------------------
 # Declaraciones de las diferentes reglas empleadas para generar las
@@ -65,7 +66,11 @@ def p_seen_Tipo(p):
     if p[-2] is ':':
         global directorio_variables_de_procs
         global variables_actuales
-        directorio_variables_de_procs[p[-1]] = {'variables':variables_actuales}
+        global variablesTemporales
+        if (p[-1] in directorio_variables_de_procs):
+            directorio_variables_de_procs[p[-1]]['variables'].extend(variables_actuales)
+        else:
+            directorio_variables_de_procs[p[-1]] = {'variables':variables_actuales}
         variables_actuales = []
 
 # Regla que permite actualizar el directorio de variables locales de cada funcion en
@@ -258,14 +263,24 @@ logging.basicConfig(filename='example.log',level=logging.INFO)
 log = logging.getLogger('example.log')
 result = parser.parse(datos,debug=log)
 
+# Seccion de pruebas para mostrar como se da la exploracion de nuestras
+# tablas de simbolos
 print()
 print("----------------------------------------------------")
 print("||    Contenidos de nuestras tablas de simbolos   ||")
 print("----------------------------------------------------")
 print()
 
-for x in directorio_raiz_procedimientos:
-    print (x)
-    for y in directorio_raiz_procedimientos[x]:
-        print (y,':',directorio_raiz_procedimientos[x][y])
-    print("------------------")
+for a in directorio_raiz_procedimientos:
+    print("----------------")
+    print("Nivel A------> ", a)
+    for b in directorio_raiz_procedimientos[a]:
+        print("\tNivel B------> ", b)
+        for c in directorio_raiz_procedimientos[a][b]:
+            print("\t\tNivel C------> ", c)
+            for d in directorio_raiz_procedimientos[a][b][c]:
+                print("\t\t\tNivel D------> ", d)
+                if d == 'variables':
+                    for e in directorio_raiz_procedimientos[a][b][c]['variables']:
+                        print("\t\t\t\tNivel E------> ", e)
+                    
