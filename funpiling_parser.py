@@ -14,17 +14,18 @@ import ply.yacc as yacc
 from funpiling_lexer import tokens
 
 # Declaracion de nuestras estructuras de datos 
-directorio_raiz_procedimientos = {} # Diccionario
+
 directorio_variables_de_procs = {} # Diccionario
-directorio_variables_referenciadas_a_memoria = {} # Diccionario
+directorio_variables_referenciadas_a_memoria_raiz = {} # Diccionario
+directorio_variables_referenciadas_a_memoria_temporal = {} # Diccionario
 variables_actuales = [] # Lista
 nombreScope = ""
 sonVariablesGlobales = 1
 offsetOperaciones = 0
-offsetGlobalesEnteras = 0
-offsetGlobalesFloats = 0
-offsetLocalesEnteras = 0
-offsetLocalesFloats = 0
+offsetGlobalesEnteras = 1
+offsetGlobalesFloats = 50
+offsetLocalesEnteras = 100
+offsetLocalesFloats = 150
 
 # --------------------Analizador Sintactico-------------------------
 # Declaraciones de las diferentes reglas empleadas para generar las
@@ -39,10 +40,14 @@ def p_programa(p):
 # el diccionario raiz de procedimientos y agregarle una referencia a las variables globales
 def p_seen_Programa(p):
     'seen_Programa : '
-    global directorio_raiz_procedimientos
     global directorio_variables_de_procs
-    directorio_raiz_procedimientos['main'] = {'locales': directorio_variables_de_procs}
-    directorio_raiz_procedimientos['main']['referencia_Globales'] = directorio_raiz_procedimientos['globales'] 
+    global nombreScope
+    global directorio_variables_referenciadas_a_memoria_raiz 
+    global directorio_variables_referenciadas_a_memoria_temporal
+    nombreScope = "main"
+    directorio_variables_referenciadas_a_memoria_temporal["referencia_Globales"] = directorio_variables_referenciadas_a_memoria_raiz["globales"]
+    directorio_variables_referenciadas_a_memoria_raiz[nombreScope] = directorio_variables_referenciadas_a_memoria_temporal
+    directorio_variables_referenciadas_a_memoria_temporal = {}
     directorio_variables_de_procs = {}
     
 def p_vars_globales(p):
@@ -61,21 +66,23 @@ def p_seen_Main(p):
     'seen_Main : '
     global offsetLocalesEnteras
     global offsetLocalesFloats
-    offsetLocalesEnteras = 0
-    offsetLocalesFloats = 0
+    offsetLocalesEnteras = 100
+    offsetLocalesFloats = 150
+    directorio_variables_referenciadas_a_memoria_temporal = {} 
     
     
 # Regla que permite actualizar el directorio de variables globales en el diccionario
 # raiz de procedimientos
 def p_seen_Vars_Globales(p):
     'seen_Vars_Globales : '
-    global directorio_raiz_procedimientos
     global directorio_variables_de_procs
+    global directorio_variables_referenciadas_a_memoria_temporal
     global sonVariablesGlobales
     global nombreScope
     nombreScope = "globales"
-    directorio_raiz_procedimientos['globales'] = directorio_variables_de_procs
+    directorio_variables_referenciadas_a_memoria_raiz[nombreScope] = directorio_variables_referenciadas_a_memoria_temporal
     directorio_variables_de_procs = {}
+    directorio_variables_referenciadas_a_memoria_temporal = {}
     sonVariablesGlobales = 0
     
 
@@ -91,7 +98,9 @@ def p_seen_Tipo(p):
         global offsetGlobalesFloats 
         global offsetLocalesEnteras 
         global offsetLocalesFloats
-        global directorio_variables_referenciadas_a_memoria
+        global nombreScope
+        global directorio_variables_referenciadas_a_memoria_raiz
+        global directorio_variables_referenciadas_a_memoria_temporal
         if (p[-1] in directorio_variables_de_procs):
             directorio_variables_de_procs[p[-1]]['variables'].extend(variables_actuales)
         else:
@@ -99,36 +108,32 @@ def p_seen_Tipo(p):
         variables_actuales = []
 
         if sonVariablesGlobales == 1:
-            print("---------------------> Son Globales")
+            #print("---------------------> Son Globales")
             for a in directorio_variables_de_procs:
                 if a == "int":
                     for b in directorio_variables_de_procs[a]['variables']:
-                        if (b not in directorio_variables_referenciadas_a_memoria):
-                            directorio_variables_referenciadas_a_memoria[b] = offsetGlobalesEnteras
+                        if (b not in directorio_variables_referenciadas_a_memoria_temporal):
+                            directorio_variables_referenciadas_a_memoria_temporal[b] = offsetGlobalesEnteras
                             offsetGlobalesEnteras += 1
-                            print("Este es el valor de la variable global int: ", b, "Offset: ", offsetGlobalesEnteras)
                 elif a == "float":
                     for b in directorio_variables_de_procs[a]['variables']:
-                        if (b not in directorio_variables_referenciadas_a_memoria):
-                            directorio_variables_referenciadas_a_memoria[b] = offsetGlobalesFloats
+                        if (b not in directorio_variables_referenciadas_a_memoria_temporal):
+                            directorio_variables_referenciadas_a_memoria_temporal[b] = offsetGlobalesFloats
                             offsetGlobalesFloats += 1
-                            print("Este es el valor de la variable global float: ", b, "Offset: ", offsetGlobalesFloats)
                     
         else:
-            print("---------------------> Son Locales")
+            #print("---------------------> Son Locales")
             for a in directorio_variables_de_procs:
                 if a == "int":
                     for b in directorio_variables_de_procs[a]['variables']:
-                        if (b not in directorio_variables_referenciadas_a_memoria):
-                            directorio_variables_referenciadas_a_memoria[b] = offsetLocalesEnteras
+                        if (b not in directorio_variables_referenciadas_a_memoria_temporal):
+                            directorio_variables_referenciadas_a_memoria_temporal[b] = offsetLocalesEnteras
                             offsetLocalesEnteras += 1
-                            print("Este es el valor de la variable local int: ", b, " Offset: ", offsetLocalesEnteras)
                 elif a == "float":
                     for b in directorio_variables_de_procs[a]['variables']:
-                        if (b not in directorio_variables_referenciadas_a_memoria):
-                            directorio_variables_referenciadas_a_memoria[b] = offsetLocalesFloats
+                        if (b not in directorio_variables_referenciadas_a_memoria_temporal):
+                            directorio_variables_referenciadas_a_memoria_temporal[b] = offsetLocalesFloats
                             offsetLocalesFloats += 1
-                            print("Este es el valor de la variable local float: ", b, " Offset: ", offsetLocalesFloats)
             
 
 # Regla que permite actualizar el directorio de variables locales de cada funcion en
@@ -137,11 +142,16 @@ def p_seen_Funcion(p):
     'seen_Funcion : '
     global directorio_raiz_procedimientos
     global directorio_variables_de_procs
-    directorio_raiz_procedimientos[p[-5]] = {'locales': directorio_variables_de_procs}
-    directorio_raiz_procedimientos[p[-5]]['referencia_Globales'] = directorio_raiz_procedimientos['globales'] 
+    global directorio_variables_referenciadas_a_memoria_raiz 
+    global directorio_variables_referenciadas_a_memoria_temporal
+    global nombreScope
+    nombreScope = p[-5]
+    directorio_variables_referenciadas_a_memoria_temporal["referencia_Globales"] = directorio_variables_referenciadas_a_memoria_raiz["globales"]
+    directorio_variables_referenciadas_a_memoria_raiz[nombreScope] = directorio_variables_referenciadas_a_memoria_temporal
     directorio_variables_de_procs = {}
-    offsetLocalesEnteras = 0
-    offsetLocalesFloats = 0
+    offsetLocalesEnteras = 100
+    offsetLocalesFloats = 150
+    directorio_variables_referenciadas_a_memoria_temporal = {}  
 
 def p_empty(p):
     'empty : '
@@ -322,10 +332,7 @@ print(datos)
 logging.basicConfig(filename='example.log',level=logging.INFO)
 log = logging.getLogger('example.log')
 result = parser.parse(datos,debug=log)
-##
-##print("---------")
-##for a in directorio_variables_referenciadas_a_memoria:
-##    print(a)
+
 # Seccion de pruebas para mostrar como se da la exploracion de nuestras
 # tablas de simbolos
 print()
@@ -334,16 +341,20 @@ print("||    Contenidos de nuestras tablas de simbolos   ||")
 print("----------------------------------------------------")
 print()
 
-for a in directorio_raiz_procedimientos:
+for a in directorio_variables_referenciadas_a_memoria_raiz:
     print("----------------")
-    print("Nivel A------> ", a)
-    for b in directorio_raiz_procedimientos[a]:
-        print("\tNivel B------> ", b)
-        for c in directorio_raiz_procedimientos[a][b]:
-            print("\t\tNivel C------> ", c)
-            for d in directorio_raiz_procedimientos[a][b][c]:
-                print("\t\t\tNivel D------> ", d)
-                if d == 'variables':
-                    for e in directorio_raiz_procedimientos[a][b][c]['variables']:
-                        print("\t\t\t\tNivel E------> ", e)
+    if a == "globales":
+        print("Nivel A------> ", a)
+        for b in directorio_variables_referenciadas_a_memoria_raiz[a]:
+            print("\tNivel B------> ", b ," : ",directorio_variables_referenciadas_a_memoria_raiz[a][b])
+    else:
+        print("Nivel A------> ", a)
+        for b in directorio_variables_referenciadas_a_memoria_raiz[a]:
+            if b != "referencia_Globales":
+                print ("\t\tNivel B------> ", b ," : ",directorio_variables_referenciadas_a_memoria_raiz[a][b])
+            else:
+                print ("\t\tNivel B------> ", b) 
+                for c in directorio_variables_referenciadas_a_memoria_raiz[a][b]:
+                    print ("\t\t\tNivel C------> ", c ," : ",directorio_variables_referenciadas_a_memoria_raiz[a][b][c])
+
                     

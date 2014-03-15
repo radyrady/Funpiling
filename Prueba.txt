@@ -1,17 +1,22 @@
 var una, dos, tres: int;
 var cuatro, cinco, seis: float;
 var jose, luis: int;
+var pedro: float;
 
 int func(){
 	var loolh: int;
 	var loolj: int;
+	var yupi: int;
 }
 
 int func1(){
+	var h: int;
+	var j: float;
 	h = 4;
 }
 
 int func2(){
+	var z, x, y: float;
 	h = 4;
 }
 
@@ -19,4 +24,5 @@ void main{
 	l_0_9 = 5;
 	var nueva1,nueva2: float;
 	var compi: int;
+	var compi2: int2;
 }
