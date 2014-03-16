@@ -1,0 +1,15 @@
+var una, dos, tres: int;
+var cuatro, cinco, seis: float;
+var jose, luis: int;
+var pedro: float;
+
+int func(){
+	pedro = (cinco + seis) + 5 - 6 * (ocho / nueve);
+	if (pedro < juan) {
+	
+	}
+}
+
+void main{
+	
+}

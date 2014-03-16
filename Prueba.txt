@@ -12,7 +12,7 @@ int func(){
 int func1(){
 	var h: int;
 	var j: float;
-	h = 4;
+	h = a + b;
 }
 
 int func2(){
@@ -24,5 +24,5 @@ void main{
 	l_0_9 = 5;
 	var nueva1,nueva2: float;
 	var compi: int;
-	var compi2: int2;
+	var compi2: int;
 }

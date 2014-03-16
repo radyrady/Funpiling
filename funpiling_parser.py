@@ -19,7 +19,11 @@ directorio_variables_de_procs = {} # Diccionario
 directorio_variables_referenciadas_a_memoria_raiz = {} # Diccionario
 directorio_variables_referenciadas_a_memoria_temporal = {} # Diccionario
 variables_actuales = [] # Lista
+pila_operadores = []
+pila_operandos = []
+pila_saltos = []
 nombreScope = ""
+identificadorTemporal = 1
 sonVariablesGlobales = 1
 offsetOperaciones = 0
 offsetGlobalesEnteras = 1
@@ -203,8 +207,28 @@ def p_while_loop(p):
 
 def p_asignacion(p):
     '''
-      asignacion : ID EQUAL expresion DEL
+      asignacion : ID seen_Id EQUAL seen_Equals expresion DEL seen_Asignacion
     '''
+def p_seen_Asignacion(p):
+    'seen_Asignacion : '
+    global pila_operadores
+    global pila_operandos
+    if pila_operadores:
+            operador = pila_operadores.pop()
+            operando = pila_operandos.pop()
+            asignadoA = pila_operandos.pop()
+            print('(', operador, operando, "null",asignadoA, ')')
+
+def p_seen_Equals(p):
+    'seen_Equals : '
+    global pila_operadores
+    pila_operadores.append(p[-1])
+    
+
+def p_seen_Id(p):
+    'seen_Id : '
+    global pila_operandos
+    pila_operandos.append(p[-1])
 
 def p_llamada_funcion(p):
     '''
@@ -225,7 +249,7 @@ def p_llamada_funcion_expresion_aux(p):
 
 def p_condicion(p):
     '''
-      condicion : IF LPARENTH expresion bloque condicion_else
+      condicion : IF LPARENTH expresion RPARENTH bloque condicion_else
     '''
 
 def p_condicion_else(p):
@@ -267,56 +291,143 @@ def p_tipo(p):
 def p_expresion(p):
     '''
       expresion : exp
-                | LTHAN exp
-                | GTHAN exp
-                | DIFF exp
-                | SAME exp
+                | exp LTHAN seen_OperadorRelacional exp seen_Relacional
+                | exp GTHAN seen_OperadorRelacional exp seen_Relacional
+                | exp DIFF seen_OperadorRelacional exp seen_Relacional
+                | exp SAME seen_OperadorRelacional exp seen_Relacional
     '''
+
+def p_seen_OperadorRelacional(p):
+    'seen_OperadorRelacional : '
+    global pila_operadores
+    pila_operadores.append(p[-1])
+
+def p_seen_Relacional(p):
+    'seen_Relacional : '
+    'seen_Termino : '
+    global pila_operadores
+    global pila_operandos
+    global identificadorTemporal
+    if pila_operadores and pila_operandos:
+        topePila = pila_operadores[-1]
+        if topePila == '==' or topePila == '<>' or topePila == '>' or topePila == '<':
+            operador = pila_operadores.pop()
+            operando2 = pila_operandos.pop()
+            operando1 = pila_operandos.pop()
+            resultado = 't' + str(identificadorTemporal)
+            identificadorTemporal += 1
+            print('(', operador, operando1, operando2, resultado, ')')
 
 def p_exp(p):
     '''
-      exp : termino exp_aux
+     exp : termino seen_Termino exp_aux
     '''
 
+def p_seen_Termino(p):
+    'seen_Termino : '
+    global pila_operadores
+    global pila_operandos
+    global identificadorTemporal
+    if pila_operadores and pila_operandos:
+        topePila = pila_operadores[-1]
+        if topePila == '+' or topePila == '-':
+            operador = pila_operadores.pop()
+            operando2 = pila_operandos.pop()
+            operando1 = pila_operandos.pop()
+            resultado = 't' + str(identificadorTemporal)
+            identificadorTemporal += 1
+            print('(', operador, operando1, operando2, resultado, ')')
+            pila_operandos.append(resultado)
+            
 def p_exp_aux(p):
     '''
-      exp_aux : PLUS exp
-              | MINUS exp
+      exp_aux : PLUS seen_Plus exp
+              | MINUS seen_Minus exp
               | empty
     '''
 
+def p_seen_Plus(p):
+    'seen_Plus : '
+    global pila_operadores
+    pila_operadores.append(p[-1])
+
+def p_seen_Minus(p):
+    'seen_Minus : '
+    global pila_operadores
+    pila_operadores.append(p[-1])
+
 def p_termino(p):
     '''
-      termino : factor termino_aux
+      termino : factor seen_Factor termino_aux
     '''
+
+def p_seen_Factor(p):
+    'seen_Factor : '
+    global pila_operadores
+    global pila_operandos
+    global identificadorTemporal
+    if pila_operadores and pila_operandos:
+        topePila = pila_operadores[-1]
+        if topePila == '*' or topePila == '/':
+            operador = pila_operadores.pop()
+            operando2 = pila_operandos.pop()
+            operando1 = pila_operandos.pop()
+            resultado = 't' + str(identificadorTemporal)
+            identificadorTemporal += 1
+            print('(', operador, operando1, operando2, resultado, ')')
+            pila_operandos.append(resultado)
 
 def p_termino_aux(p):
     '''
-      termino_aux : TIMES termino
-                  | DIVIDE termino
+      termino_aux : TIMES seen_Times termino
+                  | DIVIDE seen_Divide termino
                   | empty
     '''
 
+def p_seen_Times(p):
+    'seen_Times : '
+    global pila_operadores
+    pila_operadores.append(p[-1])
+
+def p_seen_Divide(p):
+    'seen_Divide : '
+    global pila_operadores
+    pila_operadores.append(p[-1])
+
 def p_factor(p):
     '''
-      factor : ID
-             | factor_sign INTEGER
-             | factor_sign FLOAT
-             | LPARENTH exp RPARENTH
-             | STRING
-             | ID LPARENTH expresion escritura_expresion_aux RPARENTH
+      factor : ID seen_Id 
+             | factor_sign INTEGER seen_Id
+             | factor_sign FLOAT seen_Id
+             | LPARENTH seen_Leftparenth exp RPARENTH seen_Rightparenth
+             | STRING 
+             | ID LPARENTH expresion escritura_expresion_aux RPARENTH 
     '''
 
+def p_seen_Leftparenth(p):
+    'seen_Leftparenth : '
+    global pila_operadores
+    pila_operadores.append("(")
+    
+
+def p_seen_Rightparenth(p):
+    'seen_Rightparenth : '
+    global pila_operadores
+    pila_operadores.reverse()
+    pila_operadores.remove("(")
+    pila_operadores.reverse()
+    
+    
 def p_factor_sign(p):
     '''
-      factor_sign : PLUS
-                  | MINUS
+      factor_sign : PLUS 
+                  | MINUS 
                   | empty
     '''
 
 # Regla sintactica que identifica un error de sintaxis
 def p_error(p):
-    print("Syntax error in input!")
+    print("Syntax error in input!", p)
 
 # Creacion del parser en relacion a las reglas sintacticas generadas
 # y a los tokens creados por medio del analizador lexico
@@ -324,17 +435,22 @@ parser = yacc.yacc(debug=True)
 
 
 # Seccion de pruebas obteniendo como entrada un archivo de texto
-f = open("Prueba.txt")
+f = open("Prueba2.txt")
 datos = f.read()
 print(datos)
 
+print()
+print("----------------------------------------------------")
+print("||                Cuadruplos                     ||")
+print("----------------------------------------------------")
+print()
 # Aplicacion del analizador lexico y sintactico a la entrada
 logging.basicConfig(filename='example.log',level=logging.INFO)
 log = logging.getLogger('example.log')
 result = parser.parse(datos,debug=log)
 
-# Seccion de pruebas para mostrar como se da la exploracion de nuestras
-# tablas de simbolos
+## Seccion de pruebas para mostrar como se da la exploracion de nuestras
+## tablas de simbolos
 print()
 print("----------------------------------------------------")
 print("||    Contenidos de nuestras tablas de simbolos   ||")
@@ -356,5 +472,13 @@ for a in directorio_variables_referenciadas_a_memoria_raiz:
                 print ("\t\tNivel B------> ", b) 
                 for c in directorio_variables_referenciadas_a_memoria_raiz[a][b]:
                     print ("\t\t\tNivel C------> ", c ," : ",directorio_variables_referenciadas_a_memoria_raiz[a][b][c])
+
+## ---------------------------------------------------------------------------------------------
+## Ejemplos de busquedas
+## print(directorio_variables_referenciadas_a_memoria_raiz["globales"]["dos"])
+## print(directorio_variables_referenciadas_a_memoria_raiz["func"]["referencia_Globales"]["dos"])
+## ---------------------------------------------------------------------------------------------
+##
+
 
                     
