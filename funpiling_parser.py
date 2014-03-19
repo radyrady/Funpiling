@@ -451,32 +451,32 @@ result = parser.parse(datos,debug=log)
 
 ## Seccion de pruebas para mostrar como se da la exploracion de nuestras
 ## tablas de simbolos
-print()
-print("----------------------------------------------------")
-print("||    Contenidos de nuestras tablas de simbolos   ||")
-print("----------------------------------------------------")
-print()
-
-for a in directorio_variables_referenciadas_a_memoria_raiz:
-    print("----------------")
-    if a == "globales":
-        print("Nivel A------> ", a)
-        for b in directorio_variables_referenciadas_a_memoria_raiz[a]:
-            print("\tNivel B------> ", b ," : ",directorio_variables_referenciadas_a_memoria_raiz[a][b])
-    else:
-        print("Nivel A------> ", a)
-        for b in directorio_variables_referenciadas_a_memoria_raiz[a]:
-            if b != "referencia_Globales":
-                print ("\t\tNivel B------> ", b ," : ",directorio_variables_referenciadas_a_memoria_raiz[a][b])
-            else:
-                print ("\t\tNivel B------> ", b) 
-                for c in directorio_variables_referenciadas_a_memoria_raiz[a][b]:
-                    print ("\t\t\tNivel C------> ", c ," : ",directorio_variables_referenciadas_a_memoria_raiz[a][b][c])
-
+##print()
+##print("----------------------------------------------------")
+##print("||    Contenidos de nuestras tablas de simbolos   ||")
+##print("----------------------------------------------------")
+##print()
+##
+##for a in directorio_variables_referenciadas_a_memoria_raiz:
+##    print("----------------")
+##    if a == "globales":
+##        print("Nivel A------> ", a)
+##        for b in directorio_variables_referenciadas_a_memoria_raiz[a]:
+##            print("\tNivel B------> ", b ," : ",directorio_variables_referenciadas_a_memoria_raiz[a][b])
+##    else:
+##        print("Nivel A------> ", a)
+##        for b in directorio_variables_referenciadas_a_memoria_raiz[a]:
+##            if b != "referencia_Globales":
+##                print ("\t\tNivel B------> ", b ," : ",directorio_variables_referenciadas_a_memoria_raiz[a][b])
+##            else:
+##                print ("\t\tNivel B------> ", b) 
+##                for c in directorio_variables_referenciadas_a_memoria_raiz[a][b]:
+##                    print ("\t\t\tNivel C------> ", c ," : ",directorio_variables_referenciadas_a_memoria_raiz[a][b][c])
+##
 ## ---------------------------------------------------------------------------------------------
 ## Ejemplos de busquedas
-## print(directorio_variables_referenciadas_a_memoria_raiz["globales"]["dos"])
-## print(directorio_variables_referenciadas_a_memoria_raiz["func"]["referencia_Globales"]["dos"])
+##print(directorio_variables_referenciadas_a_memoria_raiz["globales"]["dos"])
+##print(directorio_variables_referenciadas_a_memoria_raiz["func"]["referencia_Globales"]["ocho"])
 ## ---------------------------------------------------------------------------------------------
 ##
 
