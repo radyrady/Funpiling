@@ -1,0 +1,29 @@
+
+int func(){
+	var loolh: int;
+	var loolj: int;
+	var yupi: int;
+}
+
+int func1(int jose, float pedro){
+	var h: int;
+	var j: float;
+	h = a + b;
+}
+
+int func2(float juan, float miguel){
+	var z, x, y: float;
+	h = 4;
+}
+
+int func3(){
+	var hello: float;
+	var bye: int;
+}
+
+void main{
+	l_0_9 = 5;
+	var nueva1,nueva2: float;
+	var compi: int;
+	var compi2: int;
+}

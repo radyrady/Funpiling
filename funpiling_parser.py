@@ -18,11 +18,13 @@ from funpiling_lexer import tokens
 directorio_variables_de_procs = {} # Diccionario
 directorio_variables_referenciadas_a_memoria_raiz = {} # Diccionario
 directorio_variables_referenciadas_a_memoria_temporal = {} # Diccionario
+directorio_parametros_referenciados_a_memoria_temporal = {} # Diccionario
 variables_actuales = [] # Lista
 pila_operadores = []
 pila_operandos = []
 pila_saltos = []
 nombreScope = ""
+tipoParametro = ""
 identificadorTemporal = 1
 sonVariablesGlobales = 1
 offsetOperaciones = 0
@@ -50,8 +52,10 @@ def p_seen_Programa(p):
     global directorio_variables_referenciadas_a_memoria_temporal
     nombreScope = "main"
     directorio_variables_referenciadas_a_memoria_temporal["referencia_Globales"] = directorio_variables_referenciadas_a_memoria_raiz["globales"]
-    directorio_variables_referenciadas_a_memoria_raiz[nombreScope] = directorio_variables_referenciadas_a_memoria_temporal
+    directorio_variables_referenciadas_a_memoria_raiz[nombreScope] = {}
+    directorio_variables_referenciadas_a_memoria_raiz[nombreScope]["variables"] = directorio_variables_referenciadas_a_memoria_temporal
     directorio_variables_referenciadas_a_memoria_temporal = {}
+    directorio_parametros_referenciados_a_memoria_temporal = {}
     directorio_variables_de_procs = {}
     
 def p_vars_globales(p):
@@ -70,9 +74,11 @@ def p_seen_Main(p):
     'seen_Main : '
     global offsetLocalesEnteras
     global offsetLocalesFloats
+    global directorio_parametros_referenciados_a_memoria_temporal
     offsetLocalesEnteras = 100
     offsetLocalesFloats = 150
-    directorio_variables_referenciadas_a_memoria_temporal = {} 
+    directorio_variables_referenciadas_a_memoria_temporal = {}
+    directorio_parametros_referenciados_a_memoria_temporal = {}
     
     
 # Regla que permite actualizar el directorio de variables globales en el diccionario
@@ -84,7 +90,9 @@ def p_seen_Vars_Globales(p):
     global sonVariablesGlobales
     global nombreScope
     nombreScope = "globales"
-    directorio_variables_referenciadas_a_memoria_raiz[nombreScope] = directorio_variables_referenciadas_a_memoria_temporal
+    directorio_variables_referenciadas_a_memoria_raiz[nombreScope] = {}
+    directorio_variables_referenciadas_a_memoria_raiz[nombreScope]["variables"] = directorio_variables_referenciadas_a_memoria_temporal
+    directorio_variables_referenciadas_a_memoria_raiz[nombreScope]["size"] = 0
     directorio_variables_de_procs = {}
     directorio_variables_referenciadas_a_memoria_temporal = {}
     sonVariablesGlobales = 0
@@ -106,7 +114,7 @@ def p_seen_Tipo(p):
         global directorio_variables_referenciadas_a_memoria_raiz
         global directorio_variables_referenciadas_a_memoria_temporal
         if (p[-1] in directorio_variables_de_procs):
-            directorio_variables_de_procs[p[-1]]['variables'].extend(variables_actuales)
+                directorio_variables_de_procs[p[-1]]['variables'].extend(variables_actuales)
         else:
             directorio_variables_de_procs[p[-1]] = {'variables':variables_actuales}
         variables_actuales = []
@@ -130,16 +138,21 @@ def p_seen_Tipo(p):
             for a in directorio_variables_de_procs:
                 if a == "int":
                     for b in directorio_variables_de_procs[a]['variables']:
-                        if (b not in directorio_variables_referenciadas_a_memoria_temporal):
+                        if (b not in directorio_parametros_referenciados_a_memoria_temporal and b not in directorio_variables_referenciadas_a_memoria_temporal):
                             directorio_variables_referenciadas_a_memoria_temporal[b] = offsetLocalesEnteras
                             offsetLocalesEnteras += 1
                 elif a == "float":
                     for b in directorio_variables_de_procs[a]['variables']:
-                        if (b not in directorio_variables_referenciadas_a_memoria_temporal):
+                        if (b not in directorio_parametros_referenciados_a_memoria_temporal and b not in directorio_variables_referenciadas_a_memoria_temporal):
                             directorio_variables_referenciadas_a_memoria_temporal[b] = offsetLocalesFloats
                             offsetLocalesFloats += 1
-            
 
+    elif p[-2] == '(' or p[-2] == ',':
+        global tipoParametro
+        global offsetLocalesEnteras
+        global offsetGlobalesEnteras
+        tipoParametro = p[-1]
+            
 # Regla que permite actualizar el directorio de variables locales de cada funcion en
 # el diccionario raiz de procedimientos y agregarle una referencia a las variables globales
 def p_seen_Funcion(p):
@@ -148,14 +161,22 @@ def p_seen_Funcion(p):
     global directorio_variables_de_procs
     global directorio_variables_referenciadas_a_memoria_raiz 
     global directorio_variables_referenciadas_a_memoria_temporal
+    global directorio_parametros_referenciados_a_memoria_temporal
     global nombreScope
+    global offsetLocalesEnteras
+    global offsetLocalesFloats
     nombreScope = p[-5]
     directorio_variables_referenciadas_a_memoria_temporal["referencia_Globales"] = directorio_variables_referenciadas_a_memoria_raiz["globales"]
-    directorio_variables_referenciadas_a_memoria_raiz[nombreScope] = directorio_variables_referenciadas_a_memoria_temporal
+    directorio_variables_referenciadas_a_memoria_raiz[nombreScope] = {}
+    directorio_variables_referenciadas_a_memoria_raiz[nombreScope]["variables"] = directorio_variables_referenciadas_a_memoria_temporal
+    directorio_variables_referenciadas_a_memoria_raiz[nombreScope]["parametros"] = directorio_parametros_referenciados_a_memoria_temporal
+    directorio_variables_referenciadas_a_memoria_raiz[nombreScope]["size"] = 0
     directorio_variables_de_procs = {}
     offsetLocalesEnteras = 100
     offsetLocalesFloats = 150
-    directorio_variables_referenciadas_a_memoria_temporal = {}  
+    directorio_variables_referenciadas_a_memoria_temporal = {}
+    directorio_parametros_referenciados_a_memoria_temporal = {}  
+
 
 def p_empty(p):
     'empty : '
@@ -190,16 +211,35 @@ def p_funcion(p):
 
 def p_vars_funcion(p):
     '''
-      vars_funcion : tipo ID vars_funcion_aux
+      vars_funcion : tipo ID seen_Param vars_funcion_aux
                    | empty
     '''
 
 def p_vars_funcion_aux(p):
     '''
-      vars_funcion_aux : COMMA tipo ID vars_funcion_aux
+      vars_funcion_aux : COMMA tipo ID seen_Param vars_funcion_aux
                        | empty
     '''
 
+def p_seen_Param(p):
+    'seen_Param : '
+    global tipoParametro
+    global directorio_parametros_referenciados_a_memoria_temporal
+    global offsetLocalesFloats
+    global offsetLocalesEnteras
+    idParametro = p[-1]
+
+    if tipoParametro == "int":
+        if idParametro not in directorio_parametros_referenciados_a_memoria_temporal:
+            directorio_parametros_referenciados_a_memoria_temporal[idParametro] = offsetLocalesEnteras
+            offsetLocalesEnteras += 1
+
+    elif tipoParametro == "float":
+        if idParametro not in directorio_parametros_referenciados_a_memoria_temporal:
+            directorio_parametros_referenciados_a_memoria_temporal[idParametro] = offsetLocalesFloats
+            offsetLocalesFloats += 1
+
+    
 def p_while_loop(p):
     '''
       while_loop : WHILE LPARENTH expresion RPARENTH bloque
@@ -217,7 +257,7 @@ def p_seen_Asignacion(p):
             operador = pila_operadores.pop()
             operando = pila_operandos.pop()
             asignadoA = pila_operandos.pop()
-            print('(', operador, operando, "null",asignadoA, ')')
+            #print('(', operador, operando, "null",asignadoA, ')')
 
 def p_seen_Equals(p):
     'seen_Equals : '
@@ -316,7 +356,7 @@ def p_seen_Relacional(p):
             operando1 = pila_operandos.pop()
             resultado = 't' + str(identificadorTemporal)
             identificadorTemporal += 1
-            print('(', operador, operando1, operando2, resultado, ')')
+            #print('(', operador, operando1, operando2, resultado, ')')
 
 def p_exp(p):
     '''
@@ -336,7 +376,7 @@ def p_seen_Termino(p):
             operando1 = pila_operandos.pop()
             resultado = 't' + str(identificadorTemporal)
             identificadorTemporal += 1
-            print('(', operador, operando1, operando2, resultado, ')')
+            #print('(', operador, operando1, operando2, resultado, ')')
             pila_operandos.append(resultado)
             
 def p_exp_aux(p):
@@ -374,7 +414,7 @@ def p_seen_Factor(p):
             operando1 = pila_operandos.pop()
             resultado = 't' + str(identificadorTemporal)
             identificadorTemporal += 1
-            print('(', operador, operando1, operando2, resultado, ')')
+            #print('(', operador, operando1, operando2, resultado, ')')
             pila_operandos.append(resultado)
 
 def p_termino_aux(p):
@@ -435,7 +475,7 @@ parser = yacc.yacc(debug=True)
 
 
 # Seccion de pruebas obteniendo como entrada un archivo de texto
-f = open("Prueba2.txt")
+f = open("Prueba3.txt")
 datos = f.read()
 print(datos)
 
@@ -451,32 +491,47 @@ result = parser.parse(datos,debug=log)
 
 ## Seccion de pruebas para mostrar como se da la exploracion de nuestras
 ## tablas de simbolos
-##print()
-##print("----------------------------------------------------")
-##print("||    Contenidos de nuestras tablas de simbolos   ||")
-##print("----------------------------------------------------")
-##print()
-##
-##for a in directorio_variables_referenciadas_a_memoria_raiz:
-##    print("----------------")
-##    if a == "globales":
-##        print("Nivel A------> ", a)
-##        for b in directorio_variables_referenciadas_a_memoria_raiz[a]:
-##            print("\tNivel B------> ", b ," : ",directorio_variables_referenciadas_a_memoria_raiz[a][b])
-##    else:
-##        print("Nivel A------> ", a)
-##        for b in directorio_variables_referenciadas_a_memoria_raiz[a]:
-##            if b != "referencia_Globales":
-##                print ("\t\tNivel B------> ", b ," : ",directorio_variables_referenciadas_a_memoria_raiz[a][b])
-##            else:
-##                print ("\t\tNivel B------> ", b) 
-##                for c in directorio_variables_referenciadas_a_memoria_raiz[a][b]:
-##                    print ("\t\t\tNivel C------> ", c ," : ",directorio_variables_referenciadas_a_memoria_raiz[a][b][c])
-##
+print()
+print("----------------------------------------------------")
+print("||    Contenidos de nuestras tablas de simbolos   ||")
+print("----------------------------------------------------")
+print()
+
+for a in directorio_variables_referenciadas_a_memoria_raiz:
+    print("----------------")
+    print("Nivel A------> ", a)
+    if a == "globales":
+        for b in directorio_variables_referenciadas_a_memoria_raiz[a]:
+            if b != "variables":
+                print("\tNivel B------> ", b, " : ", directorio_variables_referenciadas_a_memoria_raiz[a][b])
+            else:
+                print("\tNivel B------> ", b)
+                for c in directorio_variables_referenciadas_a_memoria_raiz[a][b]:
+                    print("\t\tNivel C------> ", c ," : ",directorio_variables_referenciadas_a_memoria_raiz[a][b][c])
+    else:
+        for b in directorio_variables_referenciadas_a_memoria_raiz[a]:
+            if b != "variables" and b != "parametros":
+                print("\tNivel B------> ", b, " : ", directorio_variables_referenciadas_a_memoria_raiz[a][b])
+            else:
+                print("\tNivel B------> ", b)
+                for c in directorio_variables_referenciadas_a_memoria_raiz[a][b]:
+                    if c != "referencia_Globales":
+                        print("\t\tNivel C------> ", c ," : ",directorio_variables_referenciadas_a_memoria_raiz[a][b][c])
+                    else:
+                        print("\t\tNivel C------> ", c)
+                        for d in directorio_variables_referenciadas_a_memoria_raiz[a][b][c]:
+                            if d != "variables":
+                                print("\t\t\tNivel D------> ", d, " : " ,directorio_variables_referenciadas_a_memoria_raiz[a][b][c][d])
+                            else:
+                                print("\t\t\tNivel D------> ", d)
+                                for e in directorio_variables_referenciadas_a_memoria_raiz[a][b][c][d]:
+                                    print("\t\t\t\tNivel E------> ", e ," : ",directorio_variables_referenciadas_a_memoria_raiz[a][b][c][d][e])
+    
+
+
 ## ---------------------------------------------------------------------------------------------
 ## Ejemplos de busquedas
-##print(directorio_variables_referenciadas_a_memoria_raiz["globales"]["dos"])
-##print(directorio_variables_referenciadas_a_memoria_raiz["func"]["referencia_Globales"]["ocho"])
+## print(directorio_variables_referenciadas_a_memoria_raiz["main"]["variables"]["referencia_Globales"]["variables"]["dos"])
 ## ---------------------------------------------------------------------------------------------
 ##
 

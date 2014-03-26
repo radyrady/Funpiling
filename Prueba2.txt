@@ -4,7 +4,7 @@ var jose, luis: int;
 var pedro: float;
 
 int func(){
-	pedro = (cinco + seis) + 5 - 6 * (ocho / nueve);
+	pedro = (cinco + seis) + 5 - 6 * (ocho / (nueve + diez));
 	if (pedro < juan) {
 	
 	}
