@@ -7,8 +7,10 @@
 
 # Importa el modulo de PLY a ser utilizado para generar el analizador
 # sintactico (parser)
+from Classes import *
 import logging
 import ply.yacc as yacc
+
 
 # Importa los tokens generados por el analizador lexico (Esto es requerido)
 from funpiling_lexer import tokens
@@ -20,6 +22,8 @@ directorio_variables_referenciadas_a_memoria_raiz = {} # Diccionario
 directorio_variables_referenciadas_a_memoria_temporal = {} # Diccionario
 parametros_referenciados_a_memoria_temporal = "" 
 variables_actuales = [] # Lista
+cuadruplos = []
+cuadruplo_temporal = Cuadruplo()
 pila_operadores = []
 pila_operandos = []
 pila_saltos = []
@@ -32,6 +36,7 @@ offsetGlobalesEnteras = 1
 offsetGlobalesFloats = 50
 offsetLocalesEnteras = 100
 offsetLocalesFloats = 150
+cont = 0
 
 # --------------------Analizador Sintactico-------------------------
 # Declaraciones de las diferentes reglas empleadas para generar las
@@ -250,8 +255,46 @@ def p_seen_Param(p):
     
 def p_while_loop(p):
     '''
-      while_loop : WHILE LPARENTH expresion RPARENTH bloque
+      while_loop : WHILE seen_While LPARENTH expresion RPARENTH seen_Do bloque seen_Cycle
     '''
+
+def p_seen_While(p):
+    'seen_While : '
+    global pila_saltos
+    pila_saltos.append(cont)
+
+def p_seen_Do(p):
+    'seen_Do : '
+    global pila_operandos
+    global cuadruplo_temporal
+    global cuadruplos
+    global cont
+    global pila_saltos
+    if(True):
+        cuadruplo_temporal = Cuadruplo()
+        resultado = pila_operandos.pop()
+        cuadruplo_temporal.set_operador("GotoF")
+        cuadruplo_temporal.set_operando1(resultado)
+        cuadruplos.append(cuadruplo_temporal)
+        cont += 1
+        pila_saltos.append(cont-1)
+        
+
+def p_seen_Cycle(p):
+    'seen_Cycle : '
+    global pila_operandos
+    global cuadruplo_temporal
+    global cuadruplos
+    global cont
+    global pila_saltos
+    cuadruplo_temporal = Cuadruplo()
+    falso = pila_saltos.pop()
+    retorno = pila_saltos.pop()
+    cuadruplo_temporal.set_operador("goto")
+    cuadruplo_temporal.set_resultado(retorno)
+    cuadruplos.append(cuadruplo_temporal)
+    cont += 1
+    cuadruplos[falso].set_resultado(cont)
 
 def p_asignacion(p):
     '''
@@ -261,10 +304,17 @@ def p_seen_Asignacion(p):
     'seen_Asignacion : '
     global pila_operadores
     global pila_operandos
+    global cuadruplo_temporal
+    global cuadruplos
+    global cont
     if pila_operadores:
-            operador = pila_operadores.pop()
-            operando = pila_operandos.pop()
-            asignadoA = pila_operandos.pop()
+            cuadruplo_temporal = Cuadruplo()
+            cuadruplo_temporal.set_operador(pila_operadores.pop())
+            cuadruplo_temporal.set_operando1(pila_operandos.pop())
+            cuadruplo_temporal.set_operando2("null")
+            cuadruplo_temporal.set_resultado(pila_operandos.pop())
+            cuadruplos.append(cuadruplo_temporal)
+            cont += 1
             #print('(', operador, operando, "null",asignadoA, ')')
 
 def p_seen_Equals(p):
@@ -297,14 +347,57 @@ def p_llamada_funcion_expresion_aux(p):
 
 def p_condicion(p):
     '''
-      condicion : IF LPARENTH expresion RPARENTH bloque condicion_else
+      condicion : IF LPARENTH expresion RPARENTH seen_Then bloque condicion_else seen_Condicion
     '''
+
+def p_seen_Then(p):
+    'seen_Then : '
+    global pila_operandos
+    global cuadruplo_temporal
+    global pila_saltos
+    global cont
+    global cuadruplos
+    if(True):
+        cuadruplo_temporal = Cuadruplo()
+        resultado = pila_operandos.pop()
+        cuadruplo_temporal.set_operador("GotoF")
+        cuadruplo_temporal.set_operando1(resultado)
+        cuadruplos.append(cuadruplo_temporal)
+        cont += 1
+        pila_saltos.append(cont-1)
+        
+
+def p_seen_Condicion(p):
+    'seen_Condicion : '
+    global pila_saltos
+    global cont
+    global cuadruplos
+    fin = pila_saltos.pop()
+    cuadruplos[fin].set_resultado(cont)
+    cont += 1
+    
+    
 
 def p_condicion_else(p):
     '''
-      condicion_else : ELSE bloque
+      condicion_else : ELSE seen_Else bloque
                      | empty
     '''
+
+def p_seen_Else(p):
+    'seen_Else : '
+    global cuadruplo_temporal
+    global pila_saltos
+    global cont
+    global cuadruplos
+    cuadruplo_temporal = Cuadruplo()
+    cuadruplo_temporal.set_operador("goto")
+    cuadruplos.append(cuadruplo_temporal)
+    cont += 1
+    falso = pila_saltos.pop()
+    cuadruplos[falso].set_resultado(cont)
+    pila_saltos.append(cont-1)    
+    
 
 def p_escritura(p):
     '''
@@ -356,13 +449,20 @@ def p_seen_Relacional(p):
     global pila_operadores
     global pila_operandos
     global identificadorTemporal
+    global cuadruplos
+    global cuadruplo_temporal
+    global cont
     if pila_operadores and pila_operandos:
         topePila = pila_operadores[-1]
         if topePila == '==' or topePila == '<>' or topePila == '>' or topePila == '<':
-            operador = pila_operadores.pop()
-            operando2 = pila_operandos.pop()
-            operando1 = pila_operandos.pop()
-            resultado = 't' + str(identificadorTemporal)
+            cuadruplo_temporal = Cuadruplo()
+            cuadruplo_temporal.set_operador(pila_operadores.pop())
+            cuadruplo_temporal.set_operando2(pila_operandos.pop()) 
+            cuadruplo_temporal.set_operando1(pila_operandos.pop())
+            cuadruplo_temporal.set_resultado('t' + str(identificadorTemporal))
+            cuadruplos.append(cuadruplo_temporal)
+            pila_operandos.append(cuadruplo_temporal.get_resultado())
+            cont += 1
             identificadorTemporal += 1
             #print('(', operador, operando1, operando2, resultado, ')')
 
@@ -376,16 +476,22 @@ def p_seen_Termino(p):
     global pila_operadores
     global pila_operandos
     global identificadorTemporal
+    global cuadruplos
+    global cuadruplo_temporal
+    global cont
     if pila_operadores and pila_operandos:
         topePila = pila_operadores[-1]
         if topePila == '+' or topePila == '-':
-            operador = pila_operadores.pop()
-            operando2 = pila_operandos.pop()
-            operando1 = pila_operandos.pop()
-            resultado = 't' + str(identificadorTemporal)
+            cuadruplo_temporal = Cuadruplo()
+            cuadruplo_temporal.set_operador(pila_operadores.pop())
+            cuadruplo_temporal.set_operando2(pila_operandos.pop())
+            cuadruplo_temporal.set_operando1(pila_operandos.pop())
+            cuadruplo_temporal.set_resultado('t' + str(identificadorTemporal))
+            cuadruplos.append(cuadruplo_temporal)
+            cont += 1
             identificadorTemporal += 1
             #print('(', operador, operando1, operando2, resultado, ')')
-            pila_operandos.append(resultado)
+            pila_operandos.append(cuadruplo_temporal.get_resultado())
             
 def p_exp_aux(p):
     '''
@@ -414,16 +520,22 @@ def p_seen_Factor(p):
     global pila_operadores
     global pila_operandos
     global identificadorTemporal
+    global cuadruplos
+    global cuadruplo_temporal
+    global cont
     if pila_operadores and pila_operandos:
         topePila = pila_operadores[-1]
         if topePila == '*' or topePila == '/':
-            operador = pila_operadores.pop()
-            operando2 = pila_operandos.pop()
-            operando1 = pila_operandos.pop()
-            resultado = 't' + str(identificadorTemporal)
+            cuadruplo_temporal = Cuadruplo()
+            cuadruplo_temporal.set_operador(pila_operadores.pop())
+            cuadruplo_temporal.set_operando2(pila_operandos.pop())
+            cuadruplo_temporal.set_operando1(pila_operandos.pop())
+            cuadruplo_temporal.set_resultado('t' + str(identificadorTemporal))
+            cuadruplos.append(cuadruplo_temporal)
+            cont += 1
             identificadorTemporal += 1
             #print('(', operador, operando1, operando2, resultado, ')')
-            pila_operandos.append(resultado)
+            pila_operandos.append(cuadruplo_temporal.get_resultado())
 
 def p_termino_aux(p):
     '''
@@ -483,15 +595,10 @@ parser = yacc.yacc(debug=True)
 
 
 # Seccion de pruebas obteniendo como entrada un archivo de texto
-f = open("Prueba3.txt")
+f = open("Prueba2.txt")
 datos = f.read()
 print(datos)
 
-print()
-print("----------------------------------------------------")
-print("||                Cuadruplos                     ||")
-print("----------------------------------------------------")
-print()
 # Aplicacion del analizador lexico y sintactico a la entrada
 logging.basicConfig(filename='example.log',level=logging.INFO)
 log = logging.getLogger('example.log')
@@ -499,42 +606,67 @@ result = parser.parse(datos,debug=log)
 
 ## Seccion de pruebas para mostrar como se da la exploracion de nuestras
 ## tablas de simbolos
+##print()
+##print("----------------------------------------------------")
+##print("||    Contenidos de nuestras tablas de simbolos   ||")
+##print("----------------------------------------------------")
+##print()
+##
+##for a in directorio_variables_referenciadas_a_memoria_raiz:
+##    print("----------------")
+##    print("Nivel A------> ", a)
+##    if a == "globales":
+##        for b in directorio_variables_referenciadas_a_memoria_raiz[a]:
+##            if b != "variables":
+##                print("\tNivel B------> ", b, " : ", directorio_variables_referenciadas_a_memoria_raiz[a][b])
+##            else:
+##                print("\tNivel B------> ", b)
+##                for c in directorio_variables_referenciadas_a_memoria_raiz[a][b]:
+##                    print("\t\tNivel C------> ", c ," : ",directorio_variables_referenciadas_a_memoria_raiz[a][b][c])
+##    else:
+##        for b in directorio_variables_referenciadas_a_memoria_raiz[a]:
+##            if b != "variables":
+##                print("\tNivel B------> ", b, " : ", directorio_variables_referenciadas_a_memoria_raiz[a][b])
+##            else:
+##                print("\tNivel B------> ", b)
+##                for c in directorio_variables_referenciadas_a_memoria_raiz[a][b]:
+##                    if c != "referencia_Globales":
+##                        print("\t\tNivel C------> ", c ," : ",directorio_variables_referenciadas_a_memoria_raiz[a][b][c])
+##                    else:
+##                        print("\t\tNivel C------> ", c)
+##                        for d in directorio_variables_referenciadas_a_memoria_raiz[a][b][c]:
+##                            if d != "variables":
+##                                print("\t\t\tNivel D------> ", d, " : " ,directorio_variables_referenciadas_a_memoria_raiz[a][b][c][d])
+##                            else:
+##                                print("\t\t\tNivel D------> ", d)
+##                                for e in directorio_variables_referenciadas_a_memoria_raiz[a][b][c][d]:
+##                                    print("\t\t\t\tNivel E------> ", e ," : ",directorio_variables_referenciadas_a_memoria_raiz[a][b][c][d][e])
+##    
+
 print()
 print("----------------------------------------------------")
-print("||    Contenidos de nuestras tablas de simbolos   ||")
+print("||                Cuadruplos                     ||")
 print("----------------------------------------------------")
 print()
 
-for a in directorio_variables_referenciadas_a_memoria_raiz:
-    print("----------------")
-    print("Nivel A------> ", a)
-    if a == "globales":
-        for b in directorio_variables_referenciadas_a_memoria_raiz[a]:
-            if b != "variables":
-                print("\tNivel B------> ", b, " : ", directorio_variables_referenciadas_a_memoria_raiz[a][b])
-            else:
-                print("\tNivel B------> ", b)
-                for c in directorio_variables_referenciadas_a_memoria_raiz[a][b]:
-                    print("\t\tNivel C------> ", c ," : ",directorio_variables_referenciadas_a_memoria_raiz[a][b][c])
-    else:
-        for b in directorio_variables_referenciadas_a_memoria_raiz[a]:
-            if b != "variables":
-                print("\tNivel B------> ", b, " : ", directorio_variables_referenciadas_a_memoria_raiz[a][b])
-            else:
-                print("\tNivel B------> ", b)
-                for c in directorio_variables_referenciadas_a_memoria_raiz[a][b]:
-                    if c != "referencia_Globales":
-                        print("\t\tNivel C------> ", c ," : ",directorio_variables_referenciadas_a_memoria_raiz[a][b][c])
-                    else:
-                        print("\t\tNivel C------> ", c)
-                        for d in directorio_variables_referenciadas_a_memoria_raiz[a][b][c]:
-                            if d != "variables":
-                                print("\t\t\tNivel D------> ", d, " : " ,directorio_variables_referenciadas_a_memoria_raiz[a][b][c][d])
-                            else:
-                                print("\t\t\tNivel D------> ", d)
-                                for e in directorio_variables_referenciadas_a_memoria_raiz[a][b][c][d]:
-                                    print("\t\t\t\tNivel E------> ", e ," : ",directorio_variables_referenciadas_a_memoria_raiz[a][b][c][d][e])
-    
+indice = 0
+for a in cuadruplos:
+    print(indice,'( ', a.get_operador(),', ', a.get_operando1(),', ', a.get_operando2(),', ', a.get_resultado(), ' )')
+    indice += 1
+
+##z = cuadruplos.pop(0)
+##
+##print("------------")
+##print('( ', z.get_operador(),', ', z.get_operando1(),', ', z.get_operando2(),', ', z.get_resultado(), ' )')
+##print("------------")
+##for a in cuadruplos:
+##    print('( ', a.get_operador(),', ', a.get_operando1(),', ', a.get_operando2(),', ', a.get_resultado(), ' )')
+##
+##print("------------")
+##cuadruplos.insert(0, z)
+##for a in cuadruplos:
+##    print('( ', a.get_operador(),', ', a.get_operando1(),', ', a.get_operando2(),', ', a.get_resultado(), ' )')
+##
 
 
 ## ---------------------------------------------------------------------------------------------

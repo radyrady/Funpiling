@@ -6,7 +6,15 @@ var pedro: float;
 int func(){
 	pedro = (cinco + seis) + 5 - 6 * (ocho / (nueve + diez));
 	if (pedro < juan) {
-	
+	juan = 2;
+	miguel = 3;
+	while(i<j){
+	jose = 4;
+	miguel = (2 + 3) * 6;
+	}
+	}
+	else {
+	jose = 2 + 4 + 5;
 	}
 }
 
