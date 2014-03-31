@@ -17,10 +17,35 @@ from funpiling_lexer import tokens
 
 # Declaracion de nuestras estructuras de datos 
 
+cubo_combinaciones = {'int':{
+    'int':{'+':'int','-':'int','*':'int','/':'int','<':'bool','>':'bool','<>':'bool','&&':'error','||':'error','!=':'bool','==':'bool'},
+    'float':{'+':'float','-':'float','*':'float','/':'float','<':'bool','>':'bool','<>':'bool','&&':'error','||':'error','!=':'bool','==':'bool'},
+    'string':{'+':'error','-':'error','*':'error','/':'error','<':'error','>':'error','<>':'error','&&':'error','||':'error','!=':'error','==':'error'},
+    'bool':{'+':'error','-':'error','*':'error','/':'error','<':'error','>':'error','<>':'error','&&':'error','||':'error','!=':'error','==':'error'}
+        },
+    'float':{
+        'int':{'+':'float','-':'float','*':'float','/':'float','<':'bool','>':'bool','<>':'bool','&&':'error','||':'error','!=':'bool','==':'bool'},
+        'float':{'+':'float','-':'float','*':'float','/':'float','<':'bool','>':'bool','<>':'bool','&&':'error','||':'error','!=':'bool','==':'bool'},
+        'string':{'+':'error','-':'error','*':'error','/':'error','<':'error','>':'error','<>':'error','&&':'error','||':'error','!=':'error','==':'error'},
+        'bool':{'+':'error','-':'error','*':'error','/':'error','<':'error','>':'error','<>':'error','&&':'error','||':'error','!=':'error','==':'error'}
+        },
+    'string':{
+        'int':{'+':'error','-':'error','*':'error','/':'error','<':'error','>':'error','<>':'error','&&':'error','||':'error','!=':'error','==':'error'},
+        'float':{'+':'error','-':'error','*':'error','/':'error','<':'error','>':'error','<>':'error','&&':'error','||':'error','!=':'error','==':'error'},
+        'string':{'+':'error','-':'error','*':'error','/':'error','<':'error','>':'error','<>':'bool','&&':'error','||':'error','!=':'bool','==':'bool'},
+        'bool':{'+':'error','-':'error','*':'error','/':'error','<':'error','>':'error','<>':'error','&&':'error','||':'error','!=':'error','==':'error'}
+        },
+    'bool':{
+        'int':{'+':'error','-':'error','*':'error','/':'error','<':'error','>':'error','<>':'error','&&':'error','||':'error','!=':'error','==':'error'},
+        'float':{'+':'error','-':'error','*':'error','/':'error','<':'error','>':'error','<>':'error','&&':'error','||':'error','!=':'error','==':'error'},
+        'string':{'+':'error','-':'error','*':'error','/':'error','<':'error','>':'error','<>':'error','&&':'error','||':'error','!=':'error','==':'error'},
+        'bool':{'+':'error','-':'error','*':'error','/':'error','<':'error','>':'error','<>':'bool','&&':'error','||':'error','!=':'bool','==':'bool'}
+    }
+}
 directorio_variables_de_procs = {} # Diccionario
 directorio_variables_referenciadas_a_memoria_raiz = {} # Diccionario
 directorio_variables_referenciadas_a_memoria_temporal = {} # Diccionario
-parametros_referenciados_a_memoria_temporal = "" 
+parametros_referenciados_a_memoria_temporal = ""
 variables_actuales = [] # Lista
 cuadruplos = []
 cuadruplo_temporal = Cuadruplo()
