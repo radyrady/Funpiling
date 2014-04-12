@@ -1,10 +1,11 @@
-var una, dos, tres: int;
-var cuatro, cinco, seis: float;
+var una, dos, tres, i, j, miguel, ocho: int;
+var cuatro, cinco, seis, nueve, diez: float;
 var jose, luis: int;
-var pedro: float;
+var pedro: int;
 
-int func(){
-	pedro = (cinco + seis) + 5 - 6 * (ocho / (nueve + diez));
+int func(int luis, float juan, float susana){
+	var nueva: int;
+	pedro = (cinco + seis) + 5.55 - 6 * (ocho / (nueve + diez));
 	if (pedro < juan) {
 	juan = 2;
 	miguel = 3;
@@ -17,6 +18,11 @@ int func(){
 	jose = 2 + 4 + 5;
 	}
 }
+
+float func_luis(){
+
+}
+
 
 void main{
 	

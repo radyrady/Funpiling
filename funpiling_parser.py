@@ -18,35 +18,40 @@ from funpiling_lexer import tokens
 # Declaracion de nuestras estructuras de datos 
 
 cubo_combinaciones = {'int':{
-    'int':{'+':'int','-':'int','*':'int','/':'int','<':'bool','>':'bool','<>':'bool','&&':'error','||':'error','!=':'bool','==':'bool'},
-    'float':{'+':'float','-':'float','*':'float','/':'float','<':'bool','>':'bool','<>':'bool','&&':'error','||':'error','!=':'bool','==':'bool'},
-    'string':{'+':'error','-':'error','*':'error','/':'error','<':'error','>':'error','<>':'error','&&':'error','||':'error','!=':'error','==':'error'},
-    'bool':{'+':'error','-':'error','*':'error','/':'error','<':'error','>':'error','<>':'error','&&':'error','||':'error','!=':'error','==':'error'}
+    'int':{'+':'int','-':'int','*':'int','/':'int','<':'bool','>':'bool','<>':'bool','&&':'error','||':'error','!=':'bool','==':'bool','=':'yes'},
+    'float':{'+':'float','-':'float','*':'float','/':'float','<':'bool','>':'bool','<>':'bool','&&':'error','||':'error','!=':'bool','==':'bool','=':'error'},
+    'string':{'+':'error','-':'error','*':'error','/':'error','<':'error','>':'error','<>':'error','&&':'error','||':'error','!=':'error','==':'error','=':'error'},
+    'bool':{'+':'error','-':'error','*':'error','/':'error','<':'error','>':'error','<>':'error','&&':'error','||':'error','!=':'error','==':'error','=':'error'}
         },
     'float':{
-        'int':{'+':'float','-':'float','*':'float','/':'float','<':'bool','>':'bool','<>':'bool','&&':'error','||':'error','!=':'bool','==':'bool'},
-        'float':{'+':'float','-':'float','*':'float','/':'float','<':'bool','>':'bool','<>':'bool','&&':'error','||':'error','!=':'bool','==':'bool'},
-        'string':{'+':'error','-':'error','*':'error','/':'error','<':'error','>':'error','<>':'error','&&':'error','||':'error','!=':'error','==':'error'},
-        'bool':{'+':'error','-':'error','*':'error','/':'error','<':'error','>':'error','<>':'error','&&':'error','||':'error','!=':'error','==':'error'}
+        'int':{'+':'float','-':'float','*':'float','/':'float','<':'bool','>':'bool','<>':'bool','&&':'error','||':'error','!=':'bool','==':'bool','=':'yes'},
+        'float':{'+':'float','-':'float','*':'float','/':'float','<':'bool','>':'bool','<>':'bool','&&':'error','||':'error','!=':'bool','==':'bool','=':'yes'},
+        'string':{'+':'error','-':'error','*':'error','/':'error','<':'error','>':'error','<>':'error','&&':'error','||':'error','!=':'error','==':'error','=':'error'},
+        'bool':{'+':'error','-':'error','*':'error','/':'error','<':'error','>':'error','<>':'error','&&':'error','||':'error','!=':'error','==':'error','=':'error'}
         },
     'string':{
-        'int':{'+':'error','-':'error','*':'error','/':'error','<':'error','>':'error','<>':'error','&&':'error','||':'error','!=':'error','==':'error'},
-        'float':{'+':'error','-':'error','*':'error','/':'error','<':'error','>':'error','<>':'error','&&':'error','||':'error','!=':'error','==':'error'},
-        'string':{'+':'error','-':'error','*':'error','/':'error','<':'error','>':'error','<>':'bool','&&':'error','||':'error','!=':'bool','==':'bool'},
-        'bool':{'+':'error','-':'error','*':'error','/':'error','<':'error','>':'error','<>':'error','&&':'error','||':'error','!=':'error','==':'error'}
+        'int':{'+':'error','-':'error','*':'error','/':'error','<':'error','>':'error','<>':'error','&&':'error','||':'error','!=':'error','==':'error','=':'error'},
+        'float':{'+':'error','-':'error','*':'error','/':'error','<':'error','>':'error','<>':'error','&&':'error','||':'error','!=':'error','==':'error','=':'error'},
+        'string':{'+':'error','-':'error','*':'error','/':'error','<':'error','>':'error','<>':'bool','&&':'error','||':'error','!=':'bool','==':'bool','=':'yes'},
+        'bool':{'+':'error','-':'error','*':'error','/':'error','<':'error','>':'error','<>':'error','&&':'error','||':'error','!=':'error','==':'error','=':'error'}
         },
     'bool':{
-        'int':{'+':'error','-':'error','*':'error','/':'error','<':'error','>':'error','<>':'error','&&':'error','||':'error','!=':'error','==':'error'},
-        'float':{'+':'error','-':'error','*':'error','/':'error','<':'error','>':'error','<>':'error','&&':'error','||':'error','!=':'error','==':'error'},
-        'string':{'+':'error','-':'error','*':'error','/':'error','<':'error','>':'error','<>':'error','&&':'error','||':'error','!=':'error','==':'error'},
-        'bool':{'+':'error','-':'error','*':'error','/':'error','<':'error','>':'error','<>':'bool','&&':'error','||':'error','!=':'bool','==':'bool'}
+        'int':{'+':'error','-':'error','*':'error','/':'error','<':'error','>':'error','<>':'error','&&':'error','||':'error','!=':'error','==':'error','=':'error'},
+        'float':{'+':'error','-':'error','*':'error','/':'error','<':'error','>':'error','<>':'error','&&':'error','||':'error','!=':'error','==':'error','=':'error'},
+        'string':{'+':'error','-':'error','*':'error','/':'error','<':'error','>':'error','<>':'error','&&':'error','||':'error','!=':'error','==':'error','=':'error'},
+        'bool':{'+':'error','-':'error','*':'error','/':'error','<':'error','>':'error','<>':'bool','&&':'error','||':'error','!=':'bool','==':'bool','=':'yes'}
     }
 }
+directorio_raiz_procedimientos = {} #Diccionario
+directorio_constantes = {}
+directorio_temporales = {}
 directorio_variables_de_procs = {} # Diccionario
 directorio_variables_referenciadas_a_memoria_raiz = {} # Diccionario
 directorio_variables_referenciadas_a_memoria_temporal = {} # Diccionario
 parametros_referenciados_a_memoria_temporal = ""
 variables_actuales = [] # Lista
+tipo_funcion = [] # Lista
+funcion_actual_trabajando = [] #Lista
 cuadruplos = []
 cuadruplo_temporal = Cuadruplo()
 pila_operadores = []
@@ -61,7 +66,14 @@ offsetGlobalesEnteras = 1
 offsetGlobalesFloats = 50
 offsetLocalesEnteras = 100
 offsetLocalesFloats = 150
+offsetConstantesEnteras = 200
+offsetConstantesFlotantes = 250
 cont = 0
+contador_de_parametros = 0
+contador_de_ints_locales = 0
+contador_de_floats_locales = 0
+contador_de_ints_globales = 0
+contador_de_floats_globales = 0
 
 # --------------------Analizador Sintactico-------------------------
 # Declaraciones de las diferentes reglas empleadas para generar las
@@ -80,13 +92,20 @@ def p_seen_Programa(p):
     global nombreScope
     global directorio_variables_referenciadas_a_memoria_raiz 
     global directorio_variables_referenciadas_a_memoria_temporal
+    global contador_de_ints_locales
+    global contador_de_floats_locales
+    global contador_de_ints_globales
+    global contador_de_floats_globales
     nombreScope = "main"
     directorio_variables_referenciadas_a_memoria_temporal["referencia_Globales"] = directorio_variables_referenciadas_a_memoria_raiz["globales"]
     directorio_variables_referenciadas_a_memoria_raiz[nombreScope] = {}
     directorio_variables_referenciadas_a_memoria_raiz[nombreScope]["variables"] = directorio_variables_referenciadas_a_memoria_temporal
     directorio_variables_referenciadas_a_memoria_temporal = {}
+    directorio_variables_referenciadas_a_memoria_raiz[nombreScope]["size"] = {'int':contador_de_ints_locales+contador_de_ints_globales, 'float':contador_de_floats_locales+contador_de_floats_globales}
     parametros_referenciados_a_memoria_temporal = ""
     directorio_variables_de_procs = {}
+    contador_de_ints_locales = 0
+    contador_de_floats_locales = 0
     
 def p_vars_globales(p):
     '''
@@ -143,25 +162,31 @@ def p_seen_Tipo(p):
         global nombreScope
         global directorio_variables_referenciadas_a_memoria_raiz
         global directorio_variables_referenciadas_a_memoria_temporal
+        global contador_de_ints_locales
+        global contador_de_floats_locales
+        global contador_de_ints_globales 
+        global contador_de_floats_globales
+
         if (p[-1] in directorio_variables_de_procs):
                 directorio_variables_de_procs[p[-1]]['variables'].extend(variables_actuales)
         else:
             directorio_variables_de_procs[p[-1]] = {'variables':variables_actuales}
         variables_actuales = []
-
         if sonVariablesGlobales == 1:
             #print("---------------------> Son Globales")
             for a in directorio_variables_de_procs:
                 if a == "int":
                     for b in directorio_variables_de_procs[a]['variables']:
                         if (b not in directorio_variables_referenciadas_a_memoria_temporal):
-                            directorio_variables_referenciadas_a_memoria_temporal[b] = offsetGlobalesEnteras
+                            directorio_variables_referenciadas_a_memoria_temporal[b] = {'dir_virtual': offsetGlobalesEnteras, 'tipo':a}
                             offsetGlobalesEnteras += 1
+                            contador_de_ints_globales+= 1
                 elif a == "float":
                     for b in directorio_variables_de_procs[a]['variables']:
                         if (b not in directorio_variables_referenciadas_a_memoria_temporal):
-                            directorio_variables_referenciadas_a_memoria_temporal[b] = offsetGlobalesFloats
+                            directorio_variables_referenciadas_a_memoria_temporal[b] = {'dir_virtual': offsetGlobalesFloats, 'tipo':a}
                             offsetGlobalesFloats += 1
+                            contador_de_floats_globales += 1
                     
         else:
             #print("---------------------> Son Locales")
@@ -169,17 +194,24 @@ def p_seen_Tipo(p):
                 if a == "int":
                     for b in directorio_variables_de_procs[a]['variables']:
                         if (b not in directorio_variables_referenciadas_a_memoria_temporal):
-                            directorio_variables_referenciadas_a_memoria_temporal[b] = offsetLocalesEnteras
+                            directorio_variables_referenciadas_a_memoria_temporal[b] = {'dir_virtual': offsetGlobalesEnteras, 'tipo':a}
                             offsetLocalesEnteras += 1
+                            contador_de_ints_locales +=1
                 elif a == "float":
                     for b in directorio_variables_de_procs[a]['variables']:
                         if (b not in directorio_variables_referenciadas_a_memoria_temporal):
-                            directorio_variables_referenciadas_a_memoria_temporal[b] = offsetLocalesFloats
+                            directorio_variables_referenciadas_a_memoria_temporal[b] = {'dir_virtual': offsetGlobalesFloats, 'tipo':a}
                             offsetLocalesFloats += 1
+                            contador_de_floats_locales += 1
 
     elif p[-2] == '(' or p[-2] == ',':
         global tipoParametro
         tipoParametro = p[-1]
+
+    else:
+        #print("AQUI ENTRO",p[-1])
+        global tipo_funcion
+        tipo_funcion.append(p[-1])
             
 # Regla que permite actualizar el directorio de variables locales de cada funcion en
 # el diccionario raiz de procedimientos y agregarle una referencia a las variables globales
@@ -190,20 +222,33 @@ def p_seen_Funcion(p):
     global directorio_variables_referenciadas_a_memoria_raiz 
     global directorio_variables_referenciadas_a_memoria_temporal
     global parametros_referenciados_a_memoria_temporal
+    global contador_de_parametros
+    global tipo_funcion
     global nombreScope
     global offsetLocalesEnteras
     global offsetLocalesFloats
+    global contador_de_ints_locales
+    global contador_de_floats_locales
+    global contador_de_ints_globales
+    global contador_de_floats_globales
+    #print('AQUI ESTAN LAS FUNCIONES',p[-5])
+    #print("# PARAMETROS", contador_de_parametros)
+    #directorio_raiz_procedimientos[p[-5]] = {'tipo':tipo_funcion.pop(),'tamano':{},'dir_init':[],'variables':{}}
     nombreScope = p[-5]
     directorio_variables_referenciadas_a_memoria_temporal["referencia_Globales"] = directorio_variables_referenciadas_a_memoria_raiz["globales"]
     directorio_variables_referenciadas_a_memoria_raiz[nombreScope] = {}
     directorio_variables_referenciadas_a_memoria_raiz[nombreScope]["variables"] = directorio_variables_referenciadas_a_memoria_temporal
     directorio_variables_referenciadas_a_memoria_raiz[nombreScope]["parametros"] = parametros_referenciados_a_memoria_temporal
-    directorio_variables_referenciadas_a_memoria_raiz[nombreScope]["size"] = 0
+    directorio_variables_referenciadas_a_memoria_raiz[nombreScope]["size"] = {'int':contador_de_ints_locales+contador_de_ints_globales, 'float':contador_de_floats_locales+contador_de_floats_globales}
+    directorio_variables_referenciadas_a_memoria_raiz[nombreScope]["tipo"] = tipo_funcion.pop()
     directorio_variables_de_procs = {}
     offsetLocalesEnteras = 100
     offsetLocalesFloats = 150
     directorio_variables_referenciadas_a_memoria_temporal = {}
-    parametros_referenciados_a_memoria_temporal = ""  
+    parametros_referenciados_a_memoria_temporal = ""
+    contador_de_parametros = 0
+    contador_de_ints_locales = 0
+    contador_de_floats_locales = 0
 
 
 def p_empty(p):
@@ -251,30 +296,30 @@ def p_vars_funcion_aux(p):
 
 def p_seen_Param(p):
     'seen_Param : '
+    global contador_de_parametros
     global tipoParametro
     global directorio_variables_referenciadas_a_memoria_temporal
     global parametros_referenciados_a_memoria_temporal
     global offsetLocalesFloats
     global offsetLocalesEnteras
     idParametro = p[-1]
-
     if tipoParametro == "int":
         if idParametro not in directorio_variables_referenciadas_a_memoria_temporal:
-            directorio_variables_referenciadas_a_memoria_temporal[idParametro] = offsetLocalesEnteras
+            directorio_variables_referenciadas_a_memoria_temporal[idParametro] = {'tipo':tipoParametro, 'dir_virtual':offsetLocalesEnteras}
             offsetLocalesEnteras += 1
             if parametros_referenciados_a_memoria_temporal == "":
                 parametros_referenciados_a_memoria_temporal = tipoParametro
             else:
                 parametros_referenciados_a_memoria_temporal += ", " + tipoParametro
-
     elif tipoParametro == "float":
         if idParametro not in directorio_variables_referenciadas_a_memoria_temporal:
-            directorio_variables_referenciadas_a_memoria_temporal[idParametro] = offsetLocalesFloats
+            directorio_variables_referenciadas_a_memoria_temporal[idParametro] = {'tipo':tipoParametro, 'dir_virtual': offsetLocalesFloats}
             offsetLocalesFloats += 1
             if parametros_referenciados_a_memoria_temporal == "":
                 parametros_referenciados_a_memoria_temporal = tipoParametro
             else:
                 parametros_referenciados_a_memoria_temporal += ", " + tipoParametro
+    contador_de_parametros = contador_de_parametros + 1
 
 
     
@@ -332,15 +377,31 @@ def p_seen_Asignacion(p):
     global cuadruplo_temporal
     global cuadruplos
     global cont
+    global directorio_temporales
+    global directorio_constantes
     if pila_operadores:
             cuadruplo_temporal = Cuadruplo()
-            cuadruplo_temporal.set_operador(pila_operadores.pop())
-            cuadruplo_temporal.set_operando1(pila_operandos.pop())
-            cuadruplo_temporal.set_operando2("null")
-            cuadruplo_temporal.set_resultado(pila_operandos.pop())
-            cuadruplos.append(cuadruplo_temporal)
-            cont += 1
-            #print('(', operador, operando, "null",asignadoA, ')')
+            operando1 = pila_operandos.pop()
+            variable_almacen = pila_operandos.pop()
+            op2 = verifica_existencia_variable(variable_almacen)
+            if op2:
+                cuadruplo_temporal.set_operador(pila_operadores.pop())
+                cuadruplo_temporal.set_operando1(operando1)
+                cuadruplo_temporal.set_operando2("null")
+                cuadruplo_temporal.set_resultado(variable_almacen)
+                cuadruplos.append(cuadruplo_temporal)
+                cont += 1
+                if operando1 in directorio_temporales:
+                    if cubo_combinaciones[op2['tipo']][directorio_temporales[operando1]['tipo']]['='] == 'error':
+                        print("NO SE PUEDEN COMBINAR ESOS TIPOS ASIGNACION: ", variable_almacen, op2, operando1, directorio_temporales[operando1])
+                elif is_number(operando1):
+                    directorio_constantes[operando1] = {'tipo': return_type(operando1),'dir_virtual':''}
+                    if cubo_combinaciones[op2['tipo']][directorio_constantes[operando1]['tipo']]['='] == 'error':                        
+                        print("NO SE PUEDEN COMBINAR ESOS TIPOS ASIGNACION: ", variable_almacen, op2, operando1)
+
+            else:
+                print("ERROR: NO EXISTE ESTA VARIABLE ALMACEN: ", variable_almacen)
+
 
 def p_seen_Equals(p):
     'seen_Equals : '
@@ -351,6 +412,7 @@ def p_seen_Equals(p):
 def p_seen_Id(p):
     'seen_Id : '
     global pila_operandos
+    global directorio_variables_referenciadas_a_memoria_raiz
     pila_operandos.append(p[-1])
 
 def p_llamada_funcion(p):
@@ -477,19 +539,36 @@ def p_seen_Relacional(p):
     global cuadruplos
     global cuadruplo_temporal
     global cont
+    global directorio_temporales
     if pila_operadores and pila_operandos:
         topePila = pila_operadores[-1]
         if topePila == '==' or topePila == '<>' or topePila == '>' or topePila == '<':
             cuadruplo_temporal = Cuadruplo()
             cuadruplo_temporal.set_operador(pila_operadores.pop())
-            cuadruplo_temporal.set_operando2(pila_operandos.pop()) 
-            cuadruplo_temporal.set_operando1(pila_operandos.pop())
-            cuadruplo_temporal.set_resultado('t' + str(identificadorTemporal))
-            cuadruplos.append(cuadruplo_temporal)
-            pila_operandos.append(cuadruplo_temporal.get_resultado())
-            cont += 1
-            identificadorTemporal += 1
-            #print('(', operador, operando1, operando2, resultado, ')')
+            operando2 = pila_operandos.pop()
+            operando1 = pila_operandos.pop()
+            #print("COMPARACION: ",operando2, operando1)
+            op2 = verifica_existencia_variable(operando2)
+            op1 = verifica_existencia_variable(operando1)
+            if op2 and op1:
+                #print("ES AQUI",op2['tipo'],"  ", op1['tipo'])
+                if cubo_combinaciones[op2['tipo']][op1['tipo']][topePila] == 'error':
+                    print("NO SE PUEDEN COMBINAR ESTOS TIPOS RELACIONAL", op2, op1)
+                else:
+                    cuadruplo_temporal.set_operando2(operando2)
+                    cuadruplo_temporal.set_operando1(operando1)
+                    nombre_temporal = 't' + str(identificadorTemporal)
+                    cuadruplo_temporal.set_resultado(nombre_temporal)
+                    cuadruplos.append(cuadruplo_temporal)
+                    identificadorTemporal += 1
+                    cont += 1
+                    pila_operandos.append(cuadruplo_temporal.get_resultado())
+                    directorio_temporales[nombre_temporal] = {'tipo':cubo_combinaciones[op2['tipo']][op1['tipo']][topePila],'dir_virtual':''}
+            else:
+                if not(op2):
+                    print("ERROR: NO EXISTE ESTA VARIABLE: ", operando2)
+                else:
+                    print("ERROR: NO EXISTE ESTA VARIABLE: ", operando1)
 
 def p_exp(p):
     '''
@@ -504,19 +583,36 @@ def p_seen_Termino(p):
     global cuadruplos
     global cuadruplo_temporal
     global cont
+    global directorio_temporales
     if pila_operadores and pila_operandos:
         topePila = pila_operadores[-1]
         if topePila == '+' or topePila == '-':
             cuadruplo_temporal = Cuadruplo()
             cuadruplo_temporal.set_operador(pila_operadores.pop())
-            cuadruplo_temporal.set_operando2(pila_operandos.pop())
-            cuadruplo_temporal.set_operando1(pila_operandos.pop())
-            cuadruplo_temporal.set_resultado('t' + str(identificadorTemporal))
-            cuadruplos.append(cuadruplo_temporal)
-            cont += 1
-            identificadorTemporal += 1
+            operando2 = pila_operandos.pop()
+            operando1 = pila_operandos.pop()
             #print('(', operador, operando1, operando2, resultado, ')')
-            pila_operandos.append(cuadruplo_temporal.get_resultado())
+            #print("SUM O REST: ",operando2,operando1)
+            op2 = verifica_existencia_variable(operando2)
+            op1 = verifica_existencia_variable(operando1)
+            if op2 and op1:
+                if cubo_combinaciones[op2['tipo']][op1['tipo']][topePila] == 'error':
+                    print("NO SE PUEDEN COMBINAR ESTOS TIPOS TERMINO", op2, op1)
+                else:
+                    cuadruplo_temporal.set_operando2(operando2)
+                    cuadruplo_temporal.set_operando1(operando1)
+                    nombre_temporal = 't' + str(identificadorTemporal)
+                    cuadruplo_temporal.set_resultado(nombre_temporal)
+                    cuadruplos.append(cuadruplo_temporal)
+                    identificadorTemporal += 1
+                    cont += 1
+                    pila_operandos.append(cuadruplo_temporal.get_resultado())
+                    directorio_temporales[nombre_temporal] = {'tipo':cubo_combinaciones[op2['tipo']][op1['tipo']][topePila],'dir_virtual':''}
+            else:
+                if not(op2):
+                    print("ERROR: NO EXISTE ESTA VARIABLE: ", operando2)
+                else:
+                    print("ERROR: NO EXISTE ESTA VARIABLE: ", operando1)
             
 def p_exp_aux(p):
     '''
@@ -548,19 +644,36 @@ def p_seen_Factor(p):
     global cuadruplos
     global cuadruplo_temporal
     global cont
+    global directorio_temporales
     if pila_operadores and pila_operandos:
         topePila = pila_operadores[-1]
         if topePila == '*' or topePila == '/':
             cuadruplo_temporal = Cuadruplo()
             cuadruplo_temporal.set_operador(pila_operadores.pop())
-            cuadruplo_temporal.set_operando2(pila_operandos.pop())
-            cuadruplo_temporal.set_operando1(pila_operandos.pop())
-            cuadruplo_temporal.set_resultado('t' + str(identificadorTemporal))
-            cuadruplos.append(cuadruplo_temporal)
-            cont += 1
-            identificadorTemporal += 1
+            operando2 = pila_operandos.pop()
+            operando1 = pila_operandos.pop()
             #print('(', operador, operando1, operando2, resultado, ')')
-            pila_operandos.append(cuadruplo_temporal.get_resultado())
+            #print("MULT O DIV: ",operando2, operando1)
+            op2 = verifica_existencia_variable(operando2)
+            op1 = verifica_existencia_variable(operando1)
+            if op2 and op1:
+                if cubo_combinaciones[op2['tipo']][op1['tipo']][topePila] == 'error':
+                    print("NO SE PUEDEN COMBINAR ESTOS TIPOS FACTOR". op2, op1)
+                else:
+                    cuadruplo_temporal.set_operando2(operando2)
+                    cuadruplo_temporal.set_operando1(operando1)
+                    nombre_temporal = 't' + str(identificadorTemporal)
+                    cuadruplo_temporal.set_resultado(nombre_temporal)
+                    cuadruplos.append(cuadruplo_temporal)
+                    cont += 1
+                    identificadorTemporal += 1
+                    pila_operandos.append(cuadruplo_temporal.get_resultado())
+                    directorio_temporales[nombre_temporal] = {'tipo':cubo_combinaciones[op2['tipo']][op1['tipo']][topePila],'dir_virtual':''}                    
+            else:
+                if not(op2):
+                    print("ERROR: NO EXISTE ESTA VARIABLE: ", operando2)
+                else:
+                    print("ERROR: NO EXISTE ESTA VARIABLE: ", operando1)
 
 def p_termino_aux(p):
     '''
@@ -609,6 +722,37 @@ def p_factor_sign(p):
                   | MINUS 
                   | empty
     '''
+    
+def is_number(s):
+    try:
+        float(s) # for int, long and float
+    except ValueError:
+        return False
+    return True
+
+def return_type(s):
+    if type(s) is float:
+        return 'float'
+    else:
+        return 'int'
+
+def verifica_existencia_variable(s):
+    global directorio_variables_referenciadas_a_memoria_temporal
+    global directorio_variables_referenciadas_a_memoria_raiz
+    global directorio_constantes
+    global directorio_temporales
+    if s in directorio_variables_referenciadas_a_memoria_temporal:
+        return directorio_variables_referenciadas_a_memoria_temporal[s]
+    elif s in directorio_variables_referenciadas_a_memoria_raiz['globales']['variables']:
+        return directorio_variables_referenciadas_a_memoria_raiz['globales']['variables'][s]
+    elif s in directorio_temporales:
+        return directorio_temporales[s]
+    elif is_number(s):
+        directorio_constantes[s] = {'tipo': return_type(s),'dir_virtual':''}
+        return directorio_constantes[s]
+    else:
+        return False
+    
 
 # Regla sintactica que identifica un error de sintaxis
 def p_error(p):
@@ -667,6 +811,9 @@ result = parser.parse(datos,debug=log)
 ##                                for e in directorio_variables_referenciadas_a_memoria_raiz[a][b][c][d]:
 ##                                    print("\t\t\t\tNivel E------> ", e ," : ",directorio_variables_referenciadas_a_memoria_raiz[a][b][c][d][e])
 ##    
+
+#for key,val in directorio_variables_referenciadas_a_memoria_raiz.items():
+ #   print(key, "=>", val)
 
 print()
 print("----------------------------------------------------")
