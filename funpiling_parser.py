@@ -57,6 +57,7 @@ cuadruplo_temporal = Cuadruplo()
 pila_operadores = []
 pila_operandos = []
 pila_saltos = []
+pila_salto_main = []
 nombreScope = ""
 tipoParametro = ""
 identificadorTemporal = 1
@@ -124,10 +125,17 @@ def p_seen_Main(p):
     global offsetLocalesEnteras
     global offsetLocalesFloats
     global parametros_referenciados_a_memoria_temporal
+    global cont
+    global cuadruplos
     offsetLocalesEnteras = 100
     offsetLocalesFloats = 150
     directorio_variables_referenciadas_a_memoria_temporal = {}
     parametros_referenciados_a_memoria_temporal = ""
+    #print(cont)
+    #cont += 1
+    inicio = pila_saltos.pop()
+    cuadruplos[inicio].set_resultado(cont)
+    
     
     
 # Regla que permite actualizar el directorio de variables globales en el diccionario
@@ -138,6 +146,9 @@ def p_seen_Vars_Globales(p):
     global directorio_variables_referenciadas_a_memoria_temporal
     global sonVariablesGlobales
     global nombreScope
+    global cuadruplos
+    global cuadruplo_temporal
+    global cont
     nombreScope = "globales"
     directorio_variables_referenciadas_a_memoria_raiz[nombreScope] = {}
     directorio_variables_referenciadas_a_memoria_raiz[nombreScope]["variables"] = directorio_variables_referenciadas_a_memoria_temporal
@@ -145,6 +156,12 @@ def p_seen_Vars_Globales(p):
     directorio_variables_de_procs = {}
     directorio_variables_referenciadas_a_memoria_temporal = {}
     sonVariablesGlobales = 0
+    cuadruplo_temporal = Cuadruplo()
+    cuadruplo_temporal.set_operador("goto")
+    cuadruplos.append(cuadruplo_temporal)
+    print(cont)
+    cont += 1
+    pila_saltos.append(cont-1)
     
 
 # Regla que identifica a todas las variables de un determinado tipo y actualiza
@@ -231,9 +248,9 @@ def p_seen_Funcion(p):
     global contador_de_floats_locales
     global contador_de_ints_globales
     global contador_de_floats_globales
-    #print('AQUI ESTAN LAS FUNCIONES',p[-5])
-    #print("# PARAMETROS", contador_de_parametros)
-    #directorio_raiz_procedimientos[p[-5]] = {'tipo':tipo_funcion.pop(),'tamano':{},'dir_init':[],'variables':{}}
+    global cont
+    global cuadruplos
+    global cuadruplo_temporal
     nombreScope = p[-5]
     directorio_variables_referenciadas_a_memoria_temporal["referencia_Globales"] = directorio_variables_referenciadas_a_memoria_raiz["globales"]
     directorio_variables_referenciadas_a_memoria_raiz[nombreScope] = {}
@@ -249,6 +266,11 @@ def p_seen_Funcion(p):
     contador_de_parametros = 0
     contador_de_ints_locales = 0
     contador_de_floats_locales = 0
+    cuadruplo_temporal = Cuadruplo()
+    cuadruplo_temporal.set_operador("retorno")
+    cuadruplos.append(cuadruplo_temporal)
+    print(cont)
+    cont += 1
 
 
 def p_empty(p):
@@ -346,6 +368,7 @@ def p_seen_Do(p):
         cuadruplo_temporal.set_operador("GotoF")
         cuadruplo_temporal.set_operando1(resultado)
         cuadruplos.append(cuadruplo_temporal)
+        print(cont)
         cont += 1
         pila_saltos.append(cont-1)
         
@@ -363,6 +386,7 @@ def p_seen_Cycle(p):
     cuadruplo_temporal.set_operador("goto")
     cuadruplo_temporal.set_resultado(retorno)
     cuadruplos.append(cuadruplo_temporal)
+    print(cont)
     cont += 1
     cuadruplos[falso].set_resultado(cont)
 
@@ -379,28 +403,30 @@ def p_seen_Asignacion(p):
     global cont
     global directorio_temporales
     global directorio_constantes
+    global directorio_variables_referenciadas_a_memoria_raiz
     if pila_operadores:
             cuadruplo_temporal = Cuadruplo()
             operando1 = pila_operandos.pop()
             variable_almacen = pila_operandos.pop()
             op2 = verifica_existencia_variable(variable_almacen)
-            if op2:
-                cuadruplo_temporal.set_operador(pila_operadores.pop())
-                cuadruplo_temporal.set_operando1(operando1)
-                cuadruplo_temporal.set_operando2("null")
-                cuadruplo_temporal.set_resultado(variable_almacen)
-                cuadruplos.append(cuadruplo_temporal)
-                cont += 1
-                if operando1 in directorio_temporales:
-                    if cubo_combinaciones[op2['tipo']][directorio_temporales[operando1]['tipo']]['='] == 'error':
+            op1 = verifica_existencia_variable(operando1)
+            if op2 and op1:
+                if cubo_combinaciones[op2['tipo']][op1['tipo']]['='] == 'error':
                         print("NO SE PUEDEN COMBINAR ESOS TIPOS ASIGNACION: ", variable_almacen, op2, operando1, directorio_temporales[operando1])
-                elif is_number(operando1):
-                    directorio_constantes[operando1] = {'tipo': return_type(operando1),'dir_virtual':''}
-                    if cubo_combinaciones[op2['tipo']][directorio_constantes[operando1]['tipo']]['='] == 'error':                        
-                        print("NO SE PUEDEN COMBINAR ESOS TIPOS ASIGNACION: ", variable_almacen, op2, operando1)
+                else:
+                    cuadruplo_temporal.set_operador(pila_operadores.pop())
+                    cuadruplo_temporal.set_operando1(operando1)
+                    cuadruplo_temporal.set_operando2("null")
+                    cuadruplo_temporal.set_resultado(variable_almacen)
+                    cuadruplos.append(cuadruplo_temporal)
+                    print(cont)
+                    cont += 1
 
-            else:
+            elif op1:
                 print("ERROR: NO EXISTE ESTA VARIABLE ALMACEN: ", variable_almacen)
+            else:
+                print("ERROR: NO EXISTE LA VARIABLE QUE QUIERE ASIGNARSE ", operando1)
+                
 
 
 def p_seen_Equals(p):
@@ -450,6 +476,7 @@ def p_seen_Then(p):
         cuadruplo_temporal.set_operador("GotoF")
         cuadruplo_temporal.set_operando1(resultado)
         cuadruplos.append(cuadruplo_temporal)
+        print(cont)
         cont += 1
         pila_saltos.append(cont-1)
         
@@ -461,7 +488,8 @@ def p_seen_Condicion(p):
     global cuadruplos
     fin = pila_saltos.pop()
     cuadruplos[fin].set_resultado(cont)
-    cont += 1
+    #print(cont)
+    #cont += 1
     
     
 
@@ -480,6 +508,7 @@ def p_seen_Else(p):
     cuadruplo_temporal = Cuadruplo()
     cuadruplo_temporal.set_operador("goto")
     cuadruplos.append(cuadruplo_temporal)
+    print(cont)
     cont += 1
     falso = pila_saltos.pop()
     cuadruplos[falso].set_resultado(cont)
@@ -561,6 +590,7 @@ def p_seen_Relacional(p):
                     cuadruplo_temporal.set_resultado(nombre_temporal)
                     cuadruplos.append(cuadruplo_temporal)
                     identificadorTemporal += 1
+                    print(cont)
                     cont += 1
                     pila_operandos.append(cuadruplo_temporal.get_resultado())
                     directorio_temporales[nombre_temporal] = {'tipo':cubo_combinaciones[op2['tipo']][op1['tipo']][topePila],'dir_virtual':''}
@@ -605,6 +635,7 @@ def p_seen_Termino(p):
                     cuadruplo_temporal.set_resultado(nombre_temporal)
                     cuadruplos.append(cuadruplo_temporal)
                     identificadorTemporal += 1
+                    print(cont)
                     cont += 1
                     pila_operandos.append(cuadruplo_temporal.get_resultado())
                     directorio_temporales[nombre_temporal] = {'tipo':cubo_combinaciones[op2['tipo']][op1['tipo']][topePila],'dir_virtual':''}
@@ -665,6 +696,7 @@ def p_seen_Factor(p):
                     nombre_temporal = 't' + str(identificadorTemporal)
                     cuadruplo_temporal.set_resultado(nombre_temporal)
                     cuadruplos.append(cuadruplo_temporal)
+                    print(cont)
                     cont += 1
                     identificadorTemporal += 1
                     pila_operandos.append(cuadruplo_temporal.get_resultado())
@@ -823,9 +855,9 @@ print()
 
 indice = 0
 for a in cuadruplos:
-    print(indice,'( ', a.get_operador(),', ', a.get_operando1(),', ', a.get_operando2(),', ', a.get_resultado(), ' )')
+    print(indice,'( ', a.get_operador(),', ', a.get_operando1(),', ', a.get_operando2(),', ', a.get_resultado(),' )')
     indice += 1
-
+print(cont)
 ##z = cuadruplos.pop(0)
 ##
 ##print("------------")

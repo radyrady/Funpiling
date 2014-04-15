@@ -25,5 +25,5 @@ float func_luis(){
 
 
 void main{
-	
+	pedro = luis;
 }
