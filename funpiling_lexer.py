@@ -13,7 +13,7 @@ import ply.lex as lex
 # Lista de las palabras reservadas para el lenguaje
 # Empleadas de esta forma como indicado por el tutorial para
 # optimizar
-reserved = {'main':'MAIN', 'if':'IF', 'else':'ELSE', 'print':'PRINT','int':'INTEGER_ID', 'float':'FLOAT_ID', 'string':'STRING_ID','id':'ID','while':'WHILE','var':'VAR','void':'VOID'}
+reserved = {'main':'MAIN', 'if':'IF', 'else':'ELSE', 'print':'PRINT', 'bool': 'BOOL_ID','int':'INTEGER_ID', 'float':'FLOAT_ID', 'string':'STRING_ID','id':'ID','while':'WHILE','var':'VAR','void':'VOID', 'True': 'TRUE', 'False':'FALSE', 'return':'RETURN'}
 
 # Lista de los nombres de los diferentes tokens (elementos terminales)
 # Inclusion del grupo de palabras reservadas descrito previamente
@@ -76,8 +76,12 @@ def t_INTEGER(t):
     return t
 
 def t_STRING(t):
-    r'([\"][A-z]+[\"])|([\'][A-z]+[\'])'
+    r'\"(.)*\"'
     return t
+
+def t_BOOL(t):
+    r'(True|False)'
+    t.value = bool(t.value)
 
 # Define a rule so we can track line numbers
 def t_newline(t):

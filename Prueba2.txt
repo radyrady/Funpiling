@@ -2,6 +2,8 @@ var una, dos, tres, i, j, miguel, ocho: int;
 var cuatro, cinco, seis, nueve, diez: float;
 var jose, luis: int;
 var pedro: int;
+var esVerdadero, esFalso: bool;
+var hello, goodbye: string;
 
 int func(int luis, float juan, float susana){
 	var nueva: int;
@@ -26,4 +28,8 @@ float func_luis(){
 
 void main{
 	pedro = luis;
+	esVerdadero = True;
+	esFalso = False;
+	hello = "Hello World";
+	goodbye = "Goodbye";
 }
