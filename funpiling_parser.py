@@ -1238,6 +1238,8 @@ result = parser.parse(datos,debug=log)
 ##    print(indice,'( ', a.get_operador(),', ', a.get_operando1(),', ', a.get_operando2(),', ', a.get_resultado(),' )')
 ##    indice += 1
 ##print(cont)
+##
+##input()
 
 
 
