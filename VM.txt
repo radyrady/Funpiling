@@ -2,32 +2,19 @@ var x, z, w, a, i: int;
 var xx: float;
 var y: string;
 
-
-int func1(int x, int b, string j){
-	var pedro, juan, jose: int;
-	return 1;
-	
-}
-
-float func2(int l, int u){
-	return 1.5;
+// Jose esta haciendo un comentario!
+int factorial (int o){
+	if (o == 0){
+		return 1;
+	}
+	else {
+		return o * factorial(o - 1);
+	}
 }
 
 main{
-	x = 5;
-	z = 50/5;
-	w = 100 * 10;
-	a = 2 - 1;
-	y = "Hello World";
-	x = x + x + x + x + x ;
-	i = 1;
+	xx = factorial(0);
+	print(xx);
 
-	while (i < 6) {
-		print("Ciclo completo numero:");
-		print (i);
-		i = i + 1;
-	}
-
-	xx = func1 (x + 1, a * 5 / 6 + (5 + 4), y) * func2 (x, a);
 
 }

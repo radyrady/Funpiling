@@ -36,7 +36,7 @@ tokens = [
    'RBRACE',
    'EQUAL',
    'SAME',
-   'COLON'
+   'COLON',
 ]+list(reserved.values())
 
 
@@ -90,6 +90,7 @@ def t_newline(t):
 
 # Caracteres que son ignorados: espacios y tabs
 t_ignore  = ' \t'
+t_ignore_COMMENT = r'//.*'
 
 # Regla para el manejo de errores para identificar aquellos
 # elementos que no pertenezcan al lexico

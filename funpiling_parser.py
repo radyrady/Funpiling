@@ -46,6 +46,7 @@ cubo_combinaciones = {'int':{
 directorio_raiz_procedimientos = {} #Diccionario
 directorio_constantes = {}
 directorio_temporales = {}
+directorio_recursion = {}
 directorio_variables_de_procs = {} # Diccionario
 directorio_variables_referenciadas_a_memoria_raiz = {} # Diccionario
 directorio_variables_referenciadas_a_memoria_temporal = {} # Diccionario
@@ -360,8 +361,8 @@ def p_seen_Funcion(p):
     global dirInicioFuncion
     global nombreParametro
     global pila_operandos
-    
-    nombreScope = p[-5]
+
+    nombreScope = p[-6]
     directorio_variables_referenciadas_a_memoria_temporal["referencia_Globales"] = directorio_variables_referenciadas_a_memoria_raiz["globales"]
     directorio_variables_referenciadas_a_memoria_raiz[nombreScope] = {}
     directorio_variables_referenciadas_a_memoria_raiz[nombreScope]["variables"] = directorio_variables_referenciadas_a_memoria_temporal
@@ -410,13 +411,17 @@ def p_estatuto(p):
                | while_loop
                | retorno
     '''
-
+    
 def p_funcion(p):
     '''
-      funcion : tipoFuncion ID LPARENTH vars_funcion RPARENTH bloque seen_Funcion funcion
+      funcion : tipoFuncion ID seenIdDeclaracionFuncion LPARENTH vars_funcion RPARENTH bloque seen_Funcion funcion
               | empty
     '''
-
+def p_seenIdDeclaracionFuncion(p):
+    'seenIdDeclaracionFuncion : '
+    global nombreScope 
+    nombreScope = p[-1]
+    
 def p_vars_funcion(p):
     '''
       vars_funcion : tipo ID seen_Param vars_funcion_aux
@@ -601,9 +606,6 @@ def p_seen_Id(p):
     'seen_Id : '
     global pila_operandos
     pila_operandos.append(p[-1])
-##    for a in pila_operandos:
-##        print(a)
-##    print("--------------")
     
 
 def p_llamada_funcion(p):
@@ -624,19 +626,35 @@ def p_seenLlamadaFuncion(p):
     global cuadruplo_temporal
     global cont
     global pila_operadores
+    global parametros_referenciados_a_memoria_temporal
+    global nombreScope
+    global dirInicioFuncion
 
-    if tipoParametroLlamada == directorio_variables_referenciadas_a_memoria_raiz[nombreFuncionLlamada]['parametros']:
-        print("los parametros son correctos")
-        cuadruplo_temporal = Cuadruplo()
-        cuadruplo_temporal.set_operador("gosub")
-        cuadruplo_temporal.set_operando1(nombreFuncionLlamada)
-        cuadruplo_temporal.set_resultado(directorio_variables_referenciadas_a_memoria_raiz[nombreFuncionLlamada]['cuadruplo_inicial'])
-        cuadruplos.append(cuadruplo_temporal)
-        cont += 1
-        pila_operadores.reverse()
-        if pila_operadores.count("(") > 0:
-            pila_operadores.remove("(")
-        pila_operadores.reverse()
+    if nombreFuncionLlamada in directorio_variables_referenciadas_a_memoria_raiz.keys():
+        if tipoParametroLlamada == directorio_variables_referenciadas_a_memoria_raiz[nombreFuncionLlamada]['parametros']:
+            cuadruplo_temporal = Cuadruplo()
+            cuadruplo_temporal.set_operador("gosub")
+            cuadruplo_temporal.set_operando1(nombreFuncionLlamada)
+            cuadruplo_temporal.set_resultado(directorio_variables_referenciadas_a_memoria_raiz[nombreFuncionLlamada]['cuadruplo_inicial'])
+            cuadruplos.append(cuadruplo_temporal)
+            cont += 1
+            pila_operadores.reverse()
+            if pila_operadores.count("(") > 0:
+                pila_operadores.remove("(")
+            pila_operadores.reverse()
+
+    elif nombreFuncionLlamada == nombreScope:
+        if tipoParametroLlamada == parametros_referenciados_a_memoria_temporal:
+            cuadruplo_temporal = Cuadruplo()
+            cuadruplo_temporal.set_operador("gosub")
+            cuadruplo_temporal.set_operando1(nombreFuncionLlamada)
+            cuadruplo_temporal.set_resultado(dirInicioFuncion)
+            cuadruplos.append(cuadruplo_temporal)
+            cont += 1
+            pila_operadores.reverse()
+            if pila_operadores.count("(") > 0:
+                pila_operadores.remove("(")
+            pila_operadores.reverse()
         
     else:
         print("La funcion", nombreFuncionLlamada, "espera como parametros: ", directorio_variables_referenciadas_a_memoria_raiz[nombreFuncionLlamada]['parametros'])
@@ -645,7 +663,11 @@ def p_seenIdFuncion(p):
     'seenIdFuncion : '
     global directorio_variables_referenciadas_a_memoria_raiz
     global nombreFuncionLlamada
+    global directorio_variables_referenciadas_a_memoria_temporal
+    global nombreScope
     if p[-2] in directorio_variables_referenciadas_a_memoria_raiz.keys():
+        nombreFuncionLlamada = p[-2]
+    elif p[-2] == nombreScope:
         nombreFuncionLlamada = p[-2]
     else:
         print("La funcion", p[-2], "no fue declarada")
@@ -656,11 +678,19 @@ def p_seenIdFuncion2(p):
     global nombreFuncionLlamada
     global pila_operandos
     global pila_operadores
+    global directorio_variables_referenciadas_a_memoria_temporal
+    global nombreScope
     if p[-2] in directorio_variables_referenciadas_a_memoria_raiz.keys():
         nombreFuncionLlamada = p[-2]
         pila_operadores.append("(")
         pila_operandos.append(nombreFuncionLlamada)
+    elif p[-2] == nombreScope:
+        nombreFuncionLlamada = p[-2]
+        pila_operadores.append("(")
+        pila_operandos.append(nombreFuncionLlamada) 
     else:
+        print(nombreScope)
+        print(p[-2])
         print("La funcion", p[-2], "no fue declarada")
 
 def p_seenParenthFuncion(p):
@@ -694,6 +724,8 @@ def p_seenExpresionLlamada(p):
     global cuadruplos
     global pila_operandos
     global directorio_variables_referenciadas_a_memoria_raiz
+    global directorio_variables_referenciadas_a_memoria_temporal
+    global nombreParametro
     global nombreFuncionLlamada
     global tipoParametroLlamada
     global contador_de_parametros_llamada
@@ -705,12 +737,22 @@ def p_seenExpresionLlamada(p):
         
     elif argumento in directorio_temporales:
         tipoArgumento = directorio_temporales[argumento]['tipo']
-
-    elif argumento in directorio_constantes:
-        tipoArgumento = type(argumento)
         
     elif argumento in directorio_variables_referenciadas_a_memoria_raiz['globales']['variables']:
         tipoArgumento = directorio_variables_referenciadas_a_memoria_raiz['globales']['variables'][argumento]['tipo']
+
+    else:
+        if type(argumento) == int:
+            tipoArgumento = "int"
+
+        elif type(argumento) == float:
+            tipoArgumento = "float"
+
+        elif type(argumento) == bool:
+            tipoArgumento = "bool"
+
+        elif type(argumento) == str:
+            tipoArgumento = "string"
 
     if tipoParametroLlamada == "":
         tipoParametroLlamada = tipoArgumento
@@ -721,7 +763,10 @@ def p_seenExpresionLlamada(p):
     cuadruplo_temporal = Cuadruplo()
     cuadruplo_temporal.set_operador("param")
     cuadruplo_temporal.set_operando1(argumento)
-    cuadruplo_temporal.set_operando2(directorio_variables_referenciadas_a_memoria_raiz[nombreFuncionLlamada]['nombre_parametros'][contador_de_parametros_llamada - 1])
+    if nombreFuncionLlamada in directorio_variables_referenciadas_a_memoria_raiz.keys():
+        cuadruplo_temporal.set_operando2(directorio_variables_referenciadas_a_memoria_raiz[nombreFuncionLlamada]['nombre_parametros'][contador_de_parametros_llamada - 1])
+    else:
+        cuadruplo_temporal.set_operando2(nombreParametro[contador_de_parametros_llamada - 1])
     cuadruplo_temporal.set_resultado("param" + str(contador_de_parametros_llamada))
     cuadruplos.append(cuadruplo_temporal)
     cont += 1
@@ -958,7 +1003,6 @@ def p_seen_Termino(p):
                     cuadruplo_temporal.set_operando1(operando1)
                     nombre_temporal = 't' + str(identificadorTemporal)
                     cuadruplo_temporal.set_resultado(nombre_temporal)
-                    cuadruplo_temporal.print_cuadruplo()
                     cuadruplos.append(cuadruplo_temporal)
                     identificadorTemporal += 1
                     #print(cont)
@@ -1093,23 +1137,6 @@ def p_opcion_Id(p):
       opcion_Id : llamada_funcion2
                | seen_Id
     '''
-    
-
-##def p_seen_IdFuncion(p):
-##    'seen_IdFuncion : '
-##    global pila_operandos
-##    global esLlamadaAFuncion
-##    global directorio_variables_referenciadas_a_memoria_raiz
-##    if p[-2] in directorio_variables_referenciadas_a_memoria_raiz.keys():
-##        pila_operandos.append(p[-2])
-##        esLlamadaAFuncion = 1
-##    else:
-##        print("No existe la funcion: ", p[-2])
-##
-##def p_seen_FinLlamadaFuncion(p):
-##    'seen_FinLlamadaFuncion : '
-##    global esLlamadaAFuncion
-##    esLlamadaAFuncion = 0
 
 def p_seen_Leftparenth(p):
     'seen_Leftparenth : '
@@ -1155,6 +1182,10 @@ def verifica_existencia_variable(s):
     global directorio_variables_referenciadas_a_memoria_raiz
     global directorio_constantes
     global directorio_temporales
+    global directorio_recursion
+    global nombreScope
+    global tipo_funcion
+
     if s in directorio_variables_referenciadas_a_memoria_temporal:
         return directorio_variables_referenciadas_a_memoria_temporal[s]
     elif s in directorio_variables_referenciadas_a_memoria_raiz['globales']['variables']:
@@ -1166,7 +1197,11 @@ def verifica_existencia_variable(s):
     elif is_number(s):
         directorio_constantes[s] = {'tipo': return_type(s),'dir_virtual':'', 'valor': s}
         return directorio_constantes[s]
+    elif s == nombreScope:
+        directorio_recursion[s] = {'tipo': tipo_funcion[len(tipo_funcion)-1], 'dir_virtual':'', 'valor':0}
+        return directorio_recursion[s]
     else:
+        print(s)
         if s=="True" or s=="False":
             s = bool(s)
         directorio_constantes[s] = {'tipo': return_type(s),'dir_virtual':'', 'valor': s}
@@ -1191,8 +1226,19 @@ logging.basicConfig(filename='example.log',level=logging.INFO)
 log = logging.getLogger('example.log')
 result = parser.parse(datos,debug=log)
 
-##maquina_virtual.set_cuadruplos_y_memoria(cuadruplos, directorio_variables_referenciadas_a_memoria_raiz)
-##maquina_virtual.start()
+print()
+print("----------------------------------------------------")
+print("||                Cuadruplos                     ||")
+print("----------------------------------------------------")
+print()
+
+indice = 0
+for a in cuadruplos:
+    print(indice,'( ', a.get_operador(),', ', a.get_operando1(),', ', a.get_operando2(),', ', a.get_resultado(),' )')
+    indice += 1
+print(cont)
+
+
 
 
 
@@ -1234,21 +1280,14 @@ result = parser.parse(datos,debug=log)
 ##                                for e in directorio_variables_referenciadas_a_memoria_raiz[a][b][c][d]:
 ##                                    print("\t\t\t\tNivel E------> ", e ," : ",directorio_variables_referenciadas_a_memoria_raiz[a][b][c][d][e])
     
+maquina_virtual.set_cuadruplos_y_memoria(cuadruplos, directorio_variables_referenciadas_a_memoria_raiz)
+maquina_virtual.start()
+
 
 ##for key,val in directorio_variables_referenciadas_a_memoria_raiz.items():
 ##   print(key, "=>", val)
 
-print()
-print("----------------------------------------------------")
-print("||                Cuadruplos                     ||")
-print("----------------------------------------------------")
-print()
 
-indice = 0
-for a in cuadruplos:
-    print(indice,'( ', a.get_operador(),', ', a.get_operando1(),', ', a.get_operando2(),', ', a.get_resultado(),' )')
-    indice += 1
-print(cont)
 
 
 ##for a in directorio_constantes:
