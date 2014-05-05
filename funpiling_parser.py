@@ -371,6 +371,7 @@ def p_seen_Funcion(p):
     directorio_variables_referenciadas_a_memoria_raiz[nombreScope]["nombre_parametros"] = nombreParametro
     directorio_variables_referenciadas_a_memoria_raiz[nombreScope]["size"] = {'int':contador_de_ints_locales, 'float':contador_de_floats_locales, 'bool': contador_de_bool_locales, 'string': contador_de_string_locales}
     directorio_variables_referenciadas_a_memoria_raiz[nombreScope]["tipo"] = tipo_funcion.pop()
+    directorio_variables_referenciadas_a_memoria_raiz[nombreScope]["valor"] = 0
     directorio_variables_referenciadas_a_memoria_raiz[nombreScope]["cuadruplo_inicial"] = dirInicioFuncion
     resetVariables()
     resetContadoresLocales()
@@ -1226,17 +1227,17 @@ logging.basicConfig(filename='example.log',level=logging.INFO)
 log = logging.getLogger('example.log')
 result = parser.parse(datos,debug=log)
 
-print()
-print("----------------------------------------------------")
-print("||                Cuadruplos                     ||")
-print("----------------------------------------------------")
-print()
-
-indice = 0
-for a in cuadruplos:
-    print(indice,'( ', a.get_operador(),', ', a.get_operando1(),', ', a.get_operando2(),', ', a.get_resultado(),' )')
-    indice += 1
-print(cont)
+##print()
+##print("----------------------------------------------------")
+##print("||                Cuadruplos                     ||")
+##print("----------------------------------------------------")
+##print()
+##
+##indice = 0
+##for a in cuadruplos:
+##    print(indice,'( ', a.get_operador(),', ', a.get_operando1(),', ', a.get_operando2(),', ', a.get_resultado(),' )')
+##    indice += 1
+##print(cont)
 
 
 
