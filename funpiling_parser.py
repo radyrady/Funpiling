@@ -1310,7 +1310,7 @@ parser = yacc.yacc(debug=True)
 # Seccion de pruebas obteniendo como entrada un archivo de texto
 f = open("VM.txt")
 datos = f.read()
-print(datos)
+#print(datos)
 
 # Aplicacion del analizador lexico y sintactico a la entrada
 logging.basicConfig(filename='example.log',level=logging.INFO)
@@ -1318,8 +1318,8 @@ log = logging.getLogger('example.log')
 result = parser.parse(datos,debug=log)
 
 # Impresion del contenido de cuadruplos y de la tabla de variables
-print_cuadruplos()
-print_tabla_de_variables()
+##print_cuadruplos()
+##print_tabla_de_variables()
 
 # Invocacion de la maquina virtual e inicio de la ejecucion    
 maquina_virtual.set_cuadruplos_y_memoria(cuadruplos, directorio_variables_referenciadas_a_memoria_raiz)

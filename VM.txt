@@ -12,9 +12,23 @@ int factorial (int o){
 	}
 }
 
+int factorialNoRecursivo(int n){
+	var num: int;
+	num = 1;
+	while(n > 0){
+		num = num * n;
+		n = n - 1;
+	}
+	return num;
+}
+
 main{
 	xx = factorial(6);
 	print(xx);
-
-
+	xx = factorialNoRecursivo(6);
+	print(xx);
+	xx = factorial(7);
+	print(xx);
+	xx = factorialNoRecursivo(7);
+	print(xx);
 }

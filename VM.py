@@ -173,7 +173,6 @@ class VM:
 
             #####################################################
             elif self.cuadruplos[self.indice].get_operador() == "*":
-                
                 if (type(self.cuadruplos[self.indice].get_operando1()) == int or type(self.cuadruplos[self.indice].get_operando1()) == float):
                     izq = self.cuadruplos[self.indice].get_operando1()
 
@@ -510,7 +509,7 @@ class VM:
             #####################################################
             elif self.cuadruplos[self.indice].get_operador() == "era":
                
-                if self.contadorInicial > 0:
+                if self.contadorInicial > 0 and len(self.pila_de_ejecucion) > 0:
                     actual = self.pila_de_ejecucion.pop()
                     memoriaTemporal = {}
                     memoriaTemporal[actual] = deepcopy(self.memoria[actual])
