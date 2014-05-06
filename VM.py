@@ -1,8 +1,10 @@
 from copy import *
 class VM:
+    # Funcion que inicializa a la clase VM
     def __init__(self):
         self.cuadruplos = 0
-
+        
+    # Funcion que agrega a la maquina virtual los cuadruplos y la memoria
     def set_cuadruplos_y_memoria(self, cuadruplos, memoria):
         self.cuadruplos = cuadruplos
         self.memoria = memoria
@@ -17,14 +19,16 @@ class VM:
         self.contadorRecursividad = 1
         self.contadorInicial = 0
 
+    # Funcion que regresa los cuadruplos de la maquina virtual
     def get_cuadruplos(self):
         return cuadruplos
-    
+
+    # Funcion que imprime los contenidos de la memoria de la maquina virtual
     def print_memoria(self):
         input()
         print()
         print("----------------------------------------------------")
-        print("||    Contenidos de nuestras tablas de simbolos   ||")
+        print("||    Contenidos de nuestras memoria              ||")
         print("----------------------------------------------------")
         print()
 
@@ -80,8 +84,9 @@ class VM:
                                         print("\t\t\tNivel D------> ", d)
                                         for e in self.memoria[a][b][c][d]:
                                             print("\t\t\t\tNivel E------> ", e ," : ",self.memoria[a][b][c][d][e])
-        
 
+        
+    # Funcion que comienza con la ejecucion de la maquina virtual y contiene el codigo necesario para realizar cada una de las operaciones
     def start(self):
         while self.indice < len(self.cuadruplos):
             

@@ -83,28 +83,21 @@ def t_BOOL(t):
     r'(True|False)'
     t.value = bool(t.value)
 
-# Define a rule so we can track line numbers
+# Define la regla para obtener el numero de linea para el manejo de errores
 def t_newline(t):
     r'\n+'
     t.lexer.lineno += len(t.value)
 
-# Caracteres que son ignorados: espacios y tabs
+# Caracteres que son ignorados: espacios, tabs y comentarios
 t_ignore  = ' \t'
 t_ignore_COMMENT = r'//.*'
 
 # Regla para el manejo de errores para identificar aquellos
 # elementos que no pertenezcan al lexico
 def t_error(t):
-    print("Illegal character '%s'" % t.value[0])
+    print("Caracter ilegal '%s'" % t.value[0])
     t.lexer.skip(1)
 
 # Creacion del analizador lexico que provee el modulo PLY
 lexer = lex.lex()
-
-
-# Tokenizacion
-#while True:
-#    tok = lexer.token()
-#    if not tok: break      # No more input
-#    print(tok)
 

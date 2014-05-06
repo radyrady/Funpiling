@@ -17,7 +17,7 @@ import ply.yacc as yacc
 from funpiling_lexer import tokens
 
 # Declaracion de nuestras estructuras de datos 
-
+# Cubo semantico que define las operaciones que pueden ser aplicadas a determinados tipos
 cubo_combinaciones = {'int':{
     'int':{'+':'int','-':'int','*':'int','/':'int','<':'bool','>':'bool','<>':'bool','&&':'error','||':'error','!=':'bool','==':'bool','=':'yes'},
     'float':{'+':'float','-':'float','*':'float','/':'float','<':'bool','>':'bool','<>':'bool','&&':'error','||':'error','!=':'bool','==':'bool','=':'error'},
@@ -43,32 +43,43 @@ cubo_combinaciones = {'int':{
         'bool':{'+':'error','-':'error','*':'error','/':'error','<':'error','>':'error','<>':'bool','&&':'error','||':'error','!=':'bool','==':'bool','=':'yes'}
     }
 }
-directorio_raiz_procedimientos = {} #Diccionario
+
+# Variables globales
+# Diccionarios 
+directorio_raiz_procedimientos = {} 
 directorio_constantes = {}
 directorio_temporales = {}
 directorio_recursion = {}
-directorio_variables_de_procs = {} # Diccionario
-directorio_variables_referenciadas_a_memoria_raiz = {} # Diccionario
-directorio_variables_referenciadas_a_memoria_temporal = {} # Diccionario
-parametros_referenciados_a_memoria_temporal = ""
-variables_actuales = [] # Lista
-tipo_funcion = [] # Lista
-funcion_actual_trabajando = [] #Lista
-cuadruplos = []
+directorio_variables_de_procs = {} 
+directorio_variables_referenciadas_a_memoria_raiz = {} 
+directorio_variables_referenciadas_a_memoria_temporal = {} 
+
+# Cuadruplo y maquina virtual
 cuadruplo_temporal = Cuadruplo()
 maquina_virtual = VM()
+
+# Listas 
+variables_actuales = [] 
+tipo_funcion = [] 
+funcion_actual_trabajando = [] 
+cuadruplos = []
 pila_operadores = []
 pila_operandos = []
 pila_saltos = []
 pila_salto_main = []
+nombreParametro = []
+
+# Strings
+parametros_referenciados_a_memoria_temporal = ""
 nombreScope = ""
 tipoParametro = ""
-nombreParametro = []
 tipoParametroLlamada = ""
 nombreFuncionLlamada = ""
-identificadorTemporal = 1
+
+# Banderas
 sonVariablesGlobales = 1
-offsetOperaciones = 0
+
+# Offset y direcciones
 dirInicioFuncion = 0
 offsetGlobalesEnteras = 1
 offsetGlobalesFloats = 100
@@ -84,7 +95,10 @@ offsetAvailEnteras = 2000
 offsetAvailFlotantes = 2100
 offsetAvailBool = 2200
 offsetAvailString = 2300
+
+# Contadores
 cont = 0
+identificadorTemporal = 1
 contador_de_parametros = 0
 contador_de_parametros_llamada = 0
 contador_de_ints_locales = 0
@@ -96,7 +110,7 @@ contador_de_floats_globales = 0
 contador_de_bool_globales = 0
 contador_de_string_globales = 0
 
-
+# Funcion que permite regresar las variables a sus valores originales
 def resetVariables():
     global offsetLocalesEnteras 
     global offsetLocalesFloats
@@ -115,6 +129,7 @@ def resetVariables():
     offsetAvailBool = 2200
     offsetAvailString = 2300
 
+# Funcion que permite regresar las estructuras a sus valores originales
 def resetEstructuras():
     global directorio_temporales
     global directorio_variables_referenciadas_a_memoria_temporal
@@ -127,6 +142,7 @@ def resetEstructuras():
     parametros_referenciados_a_memoria_temporal = ""
     nombreParametro = []
 
+# Funcion que permite regresar los contadores locales a sus valores originales
 def resetContadoresLocales():
     global contador_de_ints_locales 
     global contador_de_floats_locales 
@@ -137,7 +153,7 @@ def resetContadoresLocales():
     contador_de_bool_locales = 0
     contador_de_string_locales = 0
     
-
+# Funcion que permite regresar los contadores globales a sus valores originales
 def resetContadoresGlobales():
     global contador_de_ints_globales
     global contador_de_floats_globales
@@ -155,6 +171,7 @@ def resetContadoresGlobales():
 # diferentes producciones del lenguaje. La primera produccion debe ser
 # aquella considerada como la produccion inicial
 
+# Regla que permite establecer los tokens y no terminales de un programa
 def p_programa(p):
     '''programa : vars_globales seen_Vars_Globales funcion MAIN seen_Main bloque seen_Programa 
     '''
@@ -182,7 +199,8 @@ def p_seen_Programa(p):
     resetContadoresLocales()
     resetVariables()
     resetEstructuras()
-    
+
+# Regla utilizada para permitir la declaracion de multiples variables globales
 def p_vars_globales(p):
     '''
       vars_globales : vars vars_globales
@@ -195,6 +213,8 @@ def p_seen_Vars(p):
     global variables_actuales
     variables_actuales.append(p[-1])
 
+# Regla que permite iniciar con el registro de las variables del main y genera el salto inicial para
+# la generacion del primer cuadruplo
 def p_seen_Main(p):
     'seen_Main : '
     global parametros_referenciados_a_memoria_temporal
@@ -206,12 +226,8 @@ def p_seen_Main(p):
     directorio_variables_referenciadas_a_memoria_temporal = {}
     parametros_referenciados_a_memoria_temporal = ""
     nombreParametro = []
-    #print(cont)
-    #cont += 1
     inicio = pila_saltos.pop()
     cuadruplos[inicio].set_resultado(cont)
-    
-    
     
 # Regla que permite actualizar el directorio de variables globales en el diccionario
 # raiz de procedimientos
@@ -237,7 +253,6 @@ def p_seen_Vars_Globales(p):
     cuadruplo_temporal = Cuadruplo()
     cuadruplo_temporal.set_operador("goto")
     cuadruplos.append(cuadruplo_temporal)
-    #print(cont)
     cont += 1
     pila_saltos.append(cont-1)
     
@@ -276,7 +291,6 @@ def p_seen_Tipo(p):
             directorio_variables_de_procs[p[-1]] = {'variables':variables_actuales}
         variables_actuales = []
         if sonVariablesGlobales == 1:
-            #print("---------------------> Son Globales")
             for a in directorio_variables_de_procs:
                 if a == "int":
                     for b in directorio_variables_de_procs[a]['variables']:
@@ -304,7 +318,6 @@ def p_seen_Tipo(p):
                             contador_de_string_globales += 1
                     
         else:
-            #print("---------------------> Son Locales")
             for a in directorio_variables_de_procs:
                 if a == "int":
                     for b in directorio_variables_de_procs[a]['variables']:
@@ -336,7 +349,6 @@ def p_seen_Tipo(p):
         tipoParametro = p[-1]
 
     else:
-        #print("AQUI ENTRO",p[-1])
         global tipo_funcion
         tipo_funcion.append(p[-1])
             
@@ -382,26 +394,27 @@ def p_seen_Funcion(p):
         cuadruplo_temporal.set_operador("ret")
     else:
         cuadruplo_temporal.set_operador("ret")
-    #print(cont)
     cuadruplos.append(cuadruplo_temporal)
     cont += 1
 
-
+# Regla empleada para las producciones vacias
 def p_empty(p):
     'empty : '
     pass
 
+# Regla que identifica los contenidos de un bloque
 def p_bloque(p):
     '''
       bloque : LBRACE bloque_estatuto RBRACE
     '''
-
+# Regla que indica que un bloque puede tener varios estatutos
 def p_bloque_estatuto(p):
     '''
        bloque_estatuto : estatuto bloque_estatuto
                        | empty
     '''
-
+    
+# Regla que identifica los tipos de estatutos aceptados por el lenguaje
 def p_estatuto(p):
     '''
       estatuto : asignacion
@@ -412,17 +425,21 @@ def p_estatuto(p):
                | while_loop
                | retorno
     '''
-    
+
+# Regla que identifica los contenidos aceptadas para la declaracion de una funcion
 def p_funcion(p):
     '''
       funcion : tipoFuncion ID seenIdDeclaracionFuncion LPARENTH vars_funcion RPARENTH bloque seen_Funcion funcion
               | empty
     '''
+    
+# Regla que identifica cuando la declaracion de una funcion ha iniciado y actualiza el contexto
 def p_seenIdDeclaracionFuncion(p):
     'seenIdDeclaracionFuncion : '
     global nombreScope 
     nombreScope = p[-1]
-    
+
+# Regla que identifica a las variables declaradas dentro de una funcion
 def p_vars_funcion(p):
     '''
       vars_funcion : tipo ID seen_Param vars_funcion_aux
@@ -432,12 +449,14 @@ def p_vars_funcion(p):
     global cont
     dirInicioFuncion = cont
 
+# Regla que permite la declaracion de multiples variables en una linea
 def p_vars_funcion_aux(p):
     '''
       vars_funcion_aux : COMMA tipo ID seen_Param vars_funcion_aux
                        | empty
     '''
 
+# Regla que identifica los parametros y sus tipos declarados en la funcion y actualiza las estructuras correspondientes
 def p_seen_Param(p):
     'seen_Param : '
     global contador_de_ints_locales
@@ -498,17 +517,19 @@ def p_seen_Param(p):
     contador_de_parametros = contador_de_parametros + 1
 
 
-    
+# Regla que identifica la declaracion apropiada del ciclo while
 def p_while_loop(p):
     '''
       while_loop : WHILE seen_While LPARENTH expresion RPARENTH seen_Do bloque seen_Cycle
     '''
 
+# Regla que registra el salto del incicio del ciclo while
 def p_seen_While(p):
     'seen_While : '
     global pila_saltos
     pila_saltos.append(cont)
 
+# Regla que genera el gotof del ciclo
 def p_seen_Do(p):
     'seen_Do : '
     global pila_operandos
@@ -522,10 +543,10 @@ def p_seen_Do(p):
         cuadruplo_temporal.set_operador("GotoF")
         cuadruplo_temporal.set_operando1(resultado)
         cuadruplos.append(cuadruplo_temporal)
-        #print(cont)
         cont += 1
         pila_saltos.append(cont-1)       
 
+# Regla que rellena con goto el salto necesario para el ciclo 
 def p_seen_Cycle(p):
     'seen_Cycle : '
     global pila_operandos
@@ -539,14 +560,15 @@ def p_seen_Cycle(p):
     cuadruplo_temporal.set_operador("goto")
     cuadruplo_temporal.set_resultado(retorno)
     cuadruplos.append(cuadruplo_temporal)
-    #print(cont)
     cont += 1
     cuadruplos[falso].set_resultado(cont)
-    
+
+# Regla que identifica la sintaxis necesaria para los retornos de una funcion    
 def p_retorno(p):
     '''retorno : RETURN expresion seenExpresionRetorno DEL
     '''
 
+# Regla que genera el cuadruplo necesario para el valor de retorno de la funcion
 def p_seenExpresionRetorno(p):
     'seenExpresionRetorno : '
     global cuadruplo_temporal
@@ -559,10 +581,13 @@ def p_seenExpresionRetorno(p):
     cuadruplos.append(cuadruplo_temporal)
     cont += 1
 
+# Regla que identifica la sintaxis necesaria para realizar una asignacion
 def p_asignacion(p):
     '''
       asignacion : ID seen_Id EQUAL seen_Equals expresion DEL seen_Asignacion
     '''
+
+# Regla que identifica que se ha visto una asignacion y genera el cuadruplo correspondiente
 def p_seen_Asignacion(p):
     'seen_Asignacion : '
     global pila_operadores
@@ -585,10 +610,8 @@ def p_seen_Asignacion(p):
                 else:
                     cuadruplo_temporal.set_operador(pila_operadores.pop())
                     cuadruplo_temporal.set_operando1(operando1)
- #                   cuadruplo_temporal.set_operando2("null")
                     cuadruplo_temporal.set_resultado(variable_almacen)
                     cuadruplos.append(cuadruplo_temporal)
-                    #print(cont)
                     cont += 1
 
             elif op1:
@@ -596,29 +619,32 @@ def p_seen_Asignacion(p):
             else:
                 print("ERROR: NO EXISTE LA VARIABLE QUE QUIERE ASIGNARSE ", operando1)                
 
-
+# Regla que identifica un signo de igual y actualiza la pila de operadores
 def p_seen_Equals(p):
     'seen_Equals : '
     global pila_operadores
     pila_operadores.append(p[-1])
     
-
+# Regla que identifica un id y actualiza la pila de operandos
 def p_seen_Id(p):
     'seen_Id : '
     global pila_operandos
     pila_operandos.append(p[-1])
     
 
+# Regla que identifica una llamada a funcion del tipo void
 def p_llamada_funcion(p):
     '''
       llamada_funcion : ID LPARENTH seenIdFuncion seenParenthFuncion llamada_funcion_expresion RPARENTH DEL seenLlamadaFuncion
     '''
-    
+
+# Regla que identifica una llamada a funcion con retorno
 def p_llamada_funcion2(p):
     '''
       llamada_funcion2 : LPARENTH seenIdFuncion2 seenParenthFuncion llamada_funcion_expresion RPARENTH seenLlamadaFuncion
     '''
-
+    
+# Regla que identifica que se ha llamado a una funcion y revisa que los parametros sean correctos
 def p_seenLlamadaFuncion(p):
     'seenLlamadaFuncion : '
     global tipoParametroLlamada
@@ -660,6 +686,7 @@ def p_seenLlamadaFuncion(p):
     else:
         print("La funcion", nombreFuncionLlamada, "espera como parametros: ", directorio_variables_referenciadas_a_memoria_raiz[nombreFuncionLlamada]['parametros'])
 
+# Regla que identifica el nombre de la funcion tipo void que sera llamada
 def p_seenIdFuncion(p):
     'seenIdFuncion : '
     global directorio_variables_referenciadas_a_memoria_raiz
@@ -673,6 +700,7 @@ def p_seenIdFuncion(p):
     else:
         print("La funcion", p[-2], "no fue declarada")
 
+# Regla que identifica el nombre de la funcion con retorno que sera llamada
 def p_seenIdFuncion2(p):
     'seenIdFuncion2 : '
     global directorio_variables_referenciadas_a_memoria_raiz
@@ -694,6 +722,7 @@ def p_seenIdFuncion2(p):
         print(p[-2])
         print("La funcion", p[-2], "no fue declarada")
 
+# Regla que identifica que se ha visto el parentesis de la funcion y genera el cuadruplo del era
 def p_seenParenthFuncion(p):
     'seenParenthFuncion : '
     global cuadruplo_temporal
@@ -711,13 +740,14 @@ def p_seenParenthFuncion(p):
     contador_de_parametros_llamada = 1
     cont += 1
     
-
+# Regla que identifica la definicion de la expresion que puede ser contenida en los parentesis de la llamada a funcion
 def p_llamada_funcion_expresion(p):
     '''
       llamada_funcion_expresion : expresion seenExpresionLlamada llamada_funcion_expresion_aux 
                                 | empty
     '''
 
+# Regla que identifica la expresion a ser evaluada para ser utilizada como parametro y actualiza las estructuras pertinentes y genera los cuadruplos de params
 def p_seenExpresionLlamada(p):
     'seenExpresionLlamada : '
     global cuadruplo_temporal
@@ -772,23 +802,24 @@ def p_seenExpresionLlamada(p):
     cuadruplos.append(cuadruplo_temporal)
     cont += 1
   
-
+# Regla que permite que los multiples parametros puedan ser generados a traves de multiples expresiones
 def p_llamada_funcion_expresion_aux(p):
     '''
       llamada_funcion_expresion_aux : COMMA seenCommaLlamada expresion seenExpresionLlamada llamada_funcion_expresion_aux
                                     | empty
     '''
-
+# Regla que identifica el numero de parametros de la funcion a ser llamada
 def p_seenCommaLlamada(p):
     'seenCommaLlamada : '
     global contador_de_parametros_llamada
     contador_de_parametros_llamada += 1
-    
+
+# Regla que identifica la sintaxis para un estatuto condicional
 def p_condicion(p):
     '''
       condicion : IF LPARENTH expresion RPARENTH seen_Then bloque condicion_else seen_Condicion
     '''
-
+# Regla que identifica la existencia de un if
 def p_seen_Then(p):
     'seen_Then : '
     global pila_operandos
@@ -806,7 +837,7 @@ def p_seen_Then(p):
         cont += 1
         pila_saltos.append(cont-1)
         
-
+# Regla que identifica la existencia de un estatuto else
 def p_seen_Condicion(p):
     'seen_Condicion : '
     global pila_saltos
@@ -814,17 +845,15 @@ def p_seen_Condicion(p):
     global cuadruplos
     fin = pila_saltos.pop()
     cuadruplos[fin].set_resultado(cont)
-    #print(cont)
-    #cont += 1
     
     
-
+# Regla que identifica la sintaxis apropiada para el else
 def p_condicion_else(p):
     '''
       condicion_else : ELSE seen_Else bloque
                      | empty
     '''
-
+# Regla que genera el goto necesario si la condicion es falsa
 def p_seen_Else(p):
     'seen_Else : '
     global cuadruplo_temporal
@@ -834,18 +863,17 @@ def p_seen_Else(p):
     cuadruplo_temporal = Cuadruplo()
     cuadruplo_temporal.set_operador("goto")
     cuadruplos.append(cuadruplo_temporal)
-    #print(cont)
     cont += 1
     falso = pila_saltos.pop()
     cuadruplos[falso].set_resultado(cont)
     pila_saltos.append(cont-1)    
     
-
+# Regla que identifica la sintaxis apropiada para los estatutos de impresion
 def p_escritura(p):
     '''
       escritura : PRINT LPARENTH expresion seen_Print RPARENTH DEL
     '''
-
+# Regla que genera el cuadruplo necesario para un print
 def p_seen_Print(p):
     'seen_Print : '
     global cuadruplo_temporal
@@ -858,24 +886,21 @@ def p_seen_Print(p):
     cuadruplos.append(cuadruplo_temporal)
     cont += 1
 
-def p_escritura_expresion_aux(p):
-    '''
-      escritura_expresion_aux : COMMA expresion escritura_expresion_aux
-                              | empty
-    '''
-
+# Regla que identifica sintaxis apropiada para una declaracion de variables
 def p_vars(p):
     '''
       vars : VAR ID seen_Vars vars_aux COLON tipo DEL
       
     '''
 
+# Regla que permite declarar multiples variables del mismo tipo en una linea 
 def p_vars_aux(p):
     '''
       vars_aux : COMMA ID seen_Vars vars_aux
                | empty
     '''
 
+# Regla que identifica los diferentes tipos de variables
 def p_tipo(p):
     '''
       tipo : INTEGER_ID seen_Tipo
@@ -884,6 +909,8 @@ def p_tipo(p):
            | BOOL_ID seen_Tipo
 
     '''
+
+# Regla que identifica los diferentes tipos de funciones
 def p_tipoFuncion(p):
     '''
       tipoFuncion : INTEGER_ID seen_Tipo
@@ -894,6 +921,7 @@ def p_tipoFuncion(p):
 
     '''
 
+# Regla que identifica la sintaxis de una expresion
 def p_expresion(p):
     '''
       expresion : exp
@@ -903,14 +931,15 @@ def p_expresion(p):
                 | exp SAME seen_OperadorRelacional exp seen_Relacional
     '''
 
+# Regla que identifica que se ha visto un operador relacional
 def p_seen_OperadorRelacional(p):
     'seen_OperadorRelacional : '
     global pila_operadores
     pila_operadores.append(p[-1])
 
+# Regla que se asegura de que la operacion relacional sea valida y genera el cuadruplo resultante
 def p_seen_Relacional(p):
     'seen_Relacional : '
-    'seen_Termino : '
     global pila_operadores
     global pila_operandos
     global identificadorTemporal
@@ -930,11 +959,9 @@ def p_seen_Relacional(p):
             cuadruplo_temporal.set_operador(pila_operadores.pop())
             operando2 = pila_operandos.pop()
             operando1 = pila_operandos.pop()
-            #print("COMPARACION: ",operando2, operando1)
             op2 = verifica_existencia_variable(operando2)
             op1 = verifica_existencia_variable(operando1)
             if op2 and op1:
-                #print("ES AQUI",op2['tipo'],"  ", op1['tipo'])
                 if cubo_combinaciones[op2['tipo']][op1['tipo']][topePila] == 'error':
                     print("NO SE PUEDEN COMBINAR ESTOS TIPOS RELACIONAL", operando2, op2['tipo'], operando1, op1['tipo'])
                 else:
@@ -944,7 +971,6 @@ def p_seen_Relacional(p):
                     cuadruplo_temporal.set_resultado(nombre_temporal)
                     cuadruplos.append(cuadruplo_temporal)
                     identificadorTemporal += 1
-                    #print(cont)
                     cont += 1
                     pila_operandos.append(cuadruplo_temporal.get_resultado())
                     if cubo_combinaciones[op2['tipo']][op1['tipo']][topePila] == "int":
@@ -966,11 +992,13 @@ def p_seen_Relacional(p):
                 else:
                     print("ERROR: NO EXISTE ESTA VARIABLE: ", operando1)
 
+# Regla que identifica la sintaxis para una exp que permite la creacion de prioridades entre los operadores aritmeticos
 def p_exp(p):
     '''
      exp : termino seen_Termino exp_aux
     '''
 
+# Regla que identifica la existencia de una suma o resta y su validez 
 def p_seen_Termino(p):
     'seen_Termino : '
     global pila_operadores
@@ -992,8 +1020,6 @@ def p_seen_Termino(p):
             cuadruplo_temporal.set_operador(pila_operadores.pop())
             operando2 = pila_operandos.pop()
             operando1 = pila_operandos.pop()
-            #print('(', operador, operando1, operando2, resultado, ')')
-            #print("SUM O REST: ",operando2,operando1)
             op2 = verifica_existencia_variable(operando2)
             op1 = verifica_existencia_variable(operando1)
             if op2 and op1:
@@ -1026,7 +1052,8 @@ def p_seen_Termino(p):
                     print("ERROR: NO EXISTE ESTA VARIABLE: ", operando2)
                 else:
                     print("ERROR: NO EXISTE ESTA VARIABLE: ", operando1)
-            
+
+# Regla que permite multiples sumas y restas por linea 
 def p_exp_aux(p):
     '''
       exp_aux : PLUS seen_Plus exp
@@ -1034,21 +1061,25 @@ def p_exp_aux(p):
               | empty
     '''
 
+# Regla que identifica un operador de suma y actualiza la pila de operadores
 def p_seen_Plus(p):
     'seen_Plus : '
     global pila_operadores
     pila_operadores.append(p[-1])
 
+# Regla que identifica un operador de resta y actualiza la pila de operadores
 def p_seen_Minus(p):
     'seen_Minus : '
     global pila_operadores
     pila_operadores.append(p[-1])
 
+# Regla que identfica la sintaxis necesaria para multiplicaciones y divisiones
 def p_termino(p):
     '''
       termino : factor seen_Factor termino_aux
     '''
 
+# Regla que identifica la existencia de una multiplicacion o division y su validez
 def p_seen_Factor(p):
     'seen_Factor : '
     global pila_operadores
@@ -1070,8 +1101,6 @@ def p_seen_Factor(p):
             cuadruplo_temporal.set_operador(pila_operadores.pop())
             operando2 = pila_operandos.pop()
             operando1 = pila_operandos.pop()
-            #print('(', operador, operando1, operando2, resultado, ')')
-            #print("MULT O DIV: ",operando2, operando1)
             op2 = verifica_existencia_variable(operando2)
             op1 = verifica_existencia_variable(operando1)
             if op2 and op1:
@@ -1083,7 +1112,6 @@ def p_seen_Factor(p):
                     nombre_temporal = 't' + str(identificadorTemporal)
                     cuadruplo_temporal.set_resultado(nombre_temporal)
                     cuadruplos.append(cuadruplo_temporal)
-                    #print(cont)
                     cont += 1
                     identificadorTemporal += 1
                     pila_operandos.append(cuadruplo_temporal.get_resultado())
@@ -1105,6 +1133,7 @@ def p_seen_Factor(p):
                 else:
                     print("ERROR: NO EXISTE ESTA VARIABLE: ", operando1)
 
+# Regla que permite multiples divisiones y multiplicaciones por linea
 def p_termino_aux(p):
     '''
       termino_aux : TIMES seen_Times termino
@@ -1112,16 +1141,19 @@ def p_termino_aux(p):
                   | empty
     '''
 
+# Regla que identifica a un operador de multiplicacion y lo agrega a la pila de operadores
 def p_seen_Times(p):
     'seen_Times : '
     global pila_operadores
     pila_operadores.append(p[-1])
 
+# Regla que identifica a un operador de division y lo agrega a la pila de operadores
 def p_seen_Divide(p):
     'seen_Divide : '
     global pila_operadores
     pila_operadores.append(p[-1])
 
+# Regla que identifica a los elementos atomicos de las operaciones matematicas
 def p_factor(p):
     '''
       factor : ID opcion_Id 
@@ -1133,18 +1165,20 @@ def p_factor(p):
              | STRING seen_Id
     '''
 
+# Regla que identifica que se ha visto una id en las operaaciones matematicas
 def p_opcion_Id(p):
     '''
       opcion_Id : llamada_funcion2
                | seen_Id
     '''
-
+    
+# Regla que identifica la existencia de un parentesis y agrega un fondo falso a la pila de operadores
 def p_seen_Leftparenth(p):
     'seen_Leftparenth : '
     global pila_operadores
     pila_operadores.append("(")
     
-
+# Regla que remueve el fondo falso de la pila de operadores
 def p_seen_Rightparenth(p):
     'seen_Rightparenth : '
     global pila_operadores
@@ -1152,21 +1186,22 @@ def p_seen_Rightparenth(p):
     pila_operadores.remove("(")
     pila_operadores.reverse()
     
-    
+# Regla que permite el uso de signos para las variables numericas   
 def p_factor_sign(p):
     '''
       factor_sign : PLUS 
                   | MINUS 
                   | empty
     '''
-    
+# Funcion que identifica si una variable es numerica (entera, long o flotante)   
 def is_number(s):
     try:
-        float(s) # for int, long and float
+        float(s) 
     except ValueError:
         return False
     return True
 
+# Funcion que regresa como string el tipo de una variable
 def return_type(s):
     if type(s) is float:
         return 'float'
@@ -1177,7 +1212,7 @@ def return_type(s):
     elif type(s) is str:
         return 'string'
     
-
+# Funcion que identifica la existencia de variables
 def verifica_existencia_variable(s):
     global directorio_variables_referenciadas_a_memoria_temporal
     global directorio_variables_referenciadas_a_memoria_raiz
@@ -1211,11 +1246,66 @@ def verifica_existencia_variable(s):
 # Regla sintactica que identifica un error de sintaxis
 def p_error(p):
     print("Syntax error in input!", p)
+    
+# Funcion que permite imprimir todos los cuadruplos en la lista de cuadruplos
+def print_cuadruplos():
+    print()
+    print("----------------------------------------------------")
+    print("||                Cuadruplos                     ||")
+    print("----------------------------------------------------")
+    print()
+    
+    indice = 0
+    for a in cuadruplos:
+        print(indice,'( ', a.get_operador(),', ', a.get_operando1(),', ', a.get_operando2(),', ', a.get_resultado(),' )')
+        indice += 1
+    print(cont)
+    input()
+
+# Funcion que permite imprimir a manera de drill in los contenidos de la tabla de variables
+def print_tabla_de_variables():
+    print()
+    print("----------------------------------------------------")
+    print("||    Contenidos de nuestras tablas de simbolos   ||")
+    print("----------------------------------------------------")
+    print()
+
+    for a in directorio_variables_referenciadas_a_memoria_raiz:
+        print("----------------")
+        print("Nivel A------> ", a)
+        if a == "globales":
+            for b in directorio_variables_referenciadas_a_memoria_raiz[a]:
+                if b != "variables" and b!= "temporales" and b!="constantes":
+                    print("\tNivel B------> ", b, " : ", directorio_variables_referenciadas_a_memoria_raiz[a][b])
+                else:
+                    print("\tNivel B------> ", b)
+                    for c in directorio_variables_referenciadas_a_memoria_raiz[a][b]:
+                        print("\t\tNivel C------> ", c ," : ",directorio_variables_referenciadas_a_memoria_raiz[a][b][c])
+        else:
+            for b in directorio_variables_referenciadas_a_memoria_raiz[a]:
+                if b != "variables" and b!= "temporales" and b!="constantes":
+                    print("\tNivel B------> ", b, " : ", directorio_variables_referenciadas_a_memoria_raiz[a][b])
+                else:
+                    print("\tNivel B------> ", b)
+                    for c in directorio_variables_referenciadas_a_memoria_raiz[a][b]:
+                        if c != "referencia_Globales":
+                            print("\t\tNivel C------> ", c ," : ",directorio_variables_referenciadas_a_memoria_raiz[a][b][c])
+                        else:
+                            print("\t\tNivel C------> ", c)
+                            for d in directorio_variables_referenciadas_a_memoria_raiz[a][b][c]:
+                                if d != "variables" and d != "temporales" and d!= "constantes":
+                                    print("\t\t\tNivel D------> ", d, " : " ,directorio_variables_referenciadas_a_memoria_raiz[a][b][c][d])
+                                else:
+                                    print("\t\t\tNivel D------> ", d)
+                                    for e in directorio_variables_referenciadas_a_memoria_raiz[a][b][c][d]:
+                                        print("\t\t\t\tNivel E------> ", e ," : ",directorio_variables_referenciadas_a_memoria_raiz[a][b][c][d][e])
+    input()
+    
+    
 
 # Creacion del parser en relacion a las reglas sintacticas generadas
 # y a los tokens creados por medio del analizador lexico
 parser = yacc.yacc(debug=True)
-
 
 # Seccion de pruebas obteniendo como entrada un archivo de texto
 f = open("VM.txt")
@@ -1227,96 +1317,10 @@ logging.basicConfig(filename='example.log',level=logging.INFO)
 log = logging.getLogger('example.log')
 result = parser.parse(datos,debug=log)
 
-##print()
-##print("----------------------------------------------------")
-##print("||                Cuadruplos                     ||")
-##print("----------------------------------------------------")
-##print()
-##
-##indice = 0
-##for a in cuadruplos:
-##    print(indice,'( ', a.get_operador(),', ', a.get_operando1(),', ', a.get_operando2(),', ', a.get_resultado(),' )')
-##    indice += 1
-##print(cont)
-##
-##input()
+# Impresion del contenido de cuadruplos y de la tabla de variables
+print_cuadruplos()
+print_tabla_de_variables()
 
-
-
-
-
-## Seccion de pruebas para mostrar como se da la exploracion de nuestras
-## tablas de simbolos
-##print()
-##print("----------------------------------------------------")
-##print("||    Contenidos de nuestras tablas de simbolos   ||")
-##print("----------------------------------------------------")
-##print()
-##
-##for a in directorio_variables_referenciadas_a_memoria_raiz:
-##    print("----------------")
-##    print("Nivel A------> ", a)
-##    if a == "globales":
-##        for b in directorio_variables_referenciadas_a_memoria_raiz[a]:
-##            if b != "variables" and b!= "temporales" and b!="constantes":
-##                print("\tNivel B------> ", b, " : ", directorio_variables_referenciadas_a_memoria_raiz[a][b])
-##            else:
-##                print("\tNivel B------> ", b)
-##                for c in directorio_variables_referenciadas_a_memoria_raiz[a][b]:
-##                    print("\t\tNivel C------> ", c ," : ",directorio_variables_referenciadas_a_memoria_raiz[a][b][c])
-##    else:
-##        for b in directorio_variables_referenciadas_a_memoria_raiz[a]:
-##            if b != "variables" and b!= "temporales" and b!="constantes":
-##                print("\tNivel B------> ", b, " : ", directorio_variables_referenciadas_a_memoria_raiz[a][b])
-##            else:
-##                print("\tNivel B------> ", b)
-##                for c in directorio_variables_referenciadas_a_memoria_raiz[a][b]:
-##                    if c != "referencia_Globales":
-##                        print("\t\tNivel C------> ", c ," : ",directorio_variables_referenciadas_a_memoria_raiz[a][b][c])
-##                    else:
-##                        print("\t\tNivel C------> ", c)
-##                        for d in directorio_variables_referenciadas_a_memoria_raiz[a][b][c]:
-##                            if d != "variables" and d != "temporales" and d!= "constantes":
-##                                print("\t\t\tNivel D------> ", d, " : " ,directorio_variables_referenciadas_a_memoria_raiz[a][b][c][d])
-##                            else:
-##                                print("\t\t\tNivel D------> ", d)
-##                                for e in directorio_variables_referenciadas_a_memoria_raiz[a][b][c][d]:
-##                                    print("\t\t\t\tNivel E------> ", e ," : ",directorio_variables_referenciadas_a_memoria_raiz[a][b][c][d][e])
-    
+# Invocacion de la maquina virtual e inicio de la ejecucion    
 maquina_virtual.set_cuadruplos_y_memoria(cuadruplos, directorio_variables_referenciadas_a_memoria_raiz)
 maquina_virtual.start()
-
-
-##for key,val in directorio_variables_referenciadas_a_memoria_raiz.items():
-##   print(key, "=>", val)
-
-
-
-
-##for a in directorio_constantes:
-##    print("Constante: ", a, directorio_constantes[a])
-
-
-##z = cuadruplos.pop(0)
-##
-##print("------------")
-##print('( ', z.get_operador(),', ', z.get_operando1(),', ', z.get_operando2(),', ', z.get_resultado(), ' )')
-##print("------------")
-##for a in cuadruplos:
-##    print('( ', a.get_operador(),', ', a.get_operando1(),', ', a.get_operando2(),', ', a.get_resultado(), ' )')
-##
-##print("------------")
-##cuadruplos.insert(0, z)
-##for a in cuadruplos:
-##    print('( ', a.get_operador(),', ', a.get_operando1(),', ', a.get_operando2(),', ', a.get_resultado(), ' )')
-##
-
-
-## ---------------------------------------------------------------------------------------------
-## Ejemplos de busquedas
-## print(directorio_variables_referenciadas_a_memoria_raiz["main"]["variables"]["referencia_Globales"]["variables"]["dos"])
-## ---------------------------------------------------------------------------------------------
-##
-
-
-                    
