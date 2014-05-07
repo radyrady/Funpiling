@@ -80,8 +80,8 @@ def t_STRING(t):
     return t
 
 def t_BOOL(t):
-    r'(True|False)'
-    t.value = bool(t.value)
+    r'(TRUE|FALSE)'
+    t.value = t.value
 
 # Define la regla para obtener el numero de linea para el manejo de errores
 def t_newline(t):

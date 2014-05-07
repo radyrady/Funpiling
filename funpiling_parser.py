@@ -1032,7 +1032,6 @@ def p_seen_Termino(p):
                     cuadruplo_temporal.set_resultado(nombre_temporal)
                     cuadruplos.append(cuadruplo_temporal)
                     identificadorTemporal += 1
-                    #print(cont)
                     cont += 1
                     pila_operandos.append(cuadruplo_temporal.get_resultado())
                     if cubo_combinaciones[op2['tipo']][op1['tipo']][topePila] == "int":
@@ -1237,7 +1236,6 @@ def verifica_existencia_variable(s):
         directorio_recursion[s] = {'tipo': tipo_funcion[len(tipo_funcion)-1], 'dir_virtual':'', 'valor':0}
         return directorio_recursion[s]
     else:
-        print(s)
         if s=="True" or s=="False":
             s = bool(s)
         directorio_constantes[s] = {'tipo': return_type(s),'dir_virtual':'', 'valor': s}
@@ -1310,7 +1308,7 @@ parser = yacc.yacc(debug=True)
 # Seccion de pruebas obteniendo como entrada un archivo de texto
 f = open("VM.txt")
 datos = f.read()
-#print(datos)
+print(datos)
 
 # Aplicacion del analizador lexico y sintactico a la entrada
 logging.basicConfig(filename='example.log',level=logging.INFO)
@@ -1318,8 +1316,8 @@ log = logging.getLogger('example.log')
 result = parser.parse(datos,debug=log)
 
 # Impresion del contenido de cuadruplos y de la tabla de variables
-##print_cuadruplos()
-##print_tabla_de_variables()
+#print_cuadruplos()
+#print_tabla_de_variables()
 
 # Invocacion de la maquina virtual e inicio de la ejecucion    
 maquina_virtual.set_cuadruplos_y_memoria(cuadruplos, directorio_variables_referenciadas_a_memoria_raiz)

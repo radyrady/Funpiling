@@ -407,7 +407,7 @@ class VM:
 
             ##################################################### 
             elif self.cuadruplos[self.indice].get_operador() == "=":
-                if (type(self.cuadruplos[self.indice].get_operando1()) == int or type(self.cuadruplos[self.indice].get_operando1()) == float or type(self.cuadruplos[self.indice].get_operando1()) == bool or (self.cuadruplos[self.indice].get_operando1()[:1]=='"' and self.cuadruplos[self.indice].get_operando1()[-1:]=='"')):
+                if (type(self.cuadruplos[self.indice].get_operando1()) == int or type(self.cuadruplos[self.indice].get_operando1()) == float or self.cuadruplos[self.indice].get_operando1() == "True" or self.cuadruplos[self.indice].get_operando1() == "False" or (self.cuadruplos[self.indice].get_operando1()[:1]=='"' and self.cuadruplos[self.indice].get_operando1()[-1:]=='"')):
                     izq = self.cuadruplos[self.indice].get_operando1()
 
                 else:
@@ -438,7 +438,7 @@ class VM:
                     
             #####################################################               
             elif self.cuadruplos[self.indice].get_operador() == "GotoF":
-                if(type(self.cuadruplos[self.indice].get_operando1()) == bool):
+                if(type(self.cuadruplos[self.indice].get_operando1()) == bool or self.cuadruplos[self.indice].get_operando1() == "True" or self.cuadruplos[self.indice].get_operando1() == "False"):
                     resultado = bool(self.cuadruplos[self.indice].get_operando1())
                 else:
                     if self.cuadruplos[self.indice].get_operando1() in self.memoria[self.scope]['variables'].keys():
@@ -455,7 +455,7 @@ class VM:
                     
             #####################################################
             elif self.cuadruplos[self.indice].get_operador() == "retorno":
-                if (type(self.cuadruplos[self.indice].get_operando1()) == int or type(self.cuadruplos[self.indice].get_operando1()) == float or type(self.cuadruplos[self.indice].get_operando1()) == bool or (self.cuadruplos[self.indice].get_operando1()[:1]=='"' and self.cuadruplos[self.indice].get_operando1()[-1:]=='"')):
+                if (type(self.cuadruplos[self.indice].get_operando1()) == int or type(self.cuadruplos[self.indice].get_operando1()) == float or type(self.cuadruplos[self.indice].get_operando1()) == bool or self.cuadruplos[self.indice].get_operando1() == "True" or self.cuadruplos[self.indice].get_operando1() == "False" or (self.cuadruplos[self.indice].get_operando1()[:1]=='"' and self.cuadruplos[self.indice].get_operando1()[-1:]=='"')):
                     self.memoria[self.scope]['valor'] = self.cuadruplos[self.indice].get_operando1()
                     self.pila_de_valores_de_retorno.append(self.memoria[self.scope]['valor'])
 
@@ -503,8 +503,6 @@ class VM:
                     actual = self.pila_de_ejecucion.pop()
                     self.scope = actual
 
-
-                        
                         
             #####################################################
             elif self.cuadruplos[self.indice].get_operador() == "era":
@@ -540,7 +538,7 @@ class VM:
             elif self.cuadruplos[self.indice].get_operador() == "param":
                 self.scopePrevio = self.scope
                 
-                if (type(self.cuadruplos[self.indice].get_operando1()) == int or type(self.cuadruplos[self.indice].get_operando1()) == float or type(self.cuadruplos[self.indice].get_operando1()) == bool or (self.cuadruplos[self.indice].get_operando1()[:1]=='"' and self.cuadruplos[self.indice].get_operando1()[-1:]=='"')):
+                if (type(self.cuadruplos[self.indice].get_operando1()) == int or type(self.cuadruplos[self.indice].get_operando1()) == float or type(self.cuadruplos[self.indice].get_operando1()) == bool or self.cuadruplos[self.indice].get_operando1() == "True" or self.cuadruplos[self.indice].get_operando1() == "False" or (self.cuadruplos[self.indice].get_operando1()[:1]=='"' and self.cuadruplos[self.indice].get_operando1()[-1:]=='"')):
                     self.memoria[self.scopeParam]['variables'][self.cuadruplos[self.indice].get_operando2()]['valor'] = self.cuadruplos[self.indice].get_operando1()
                
                 if self.cuadruplos[self.indice].get_operando1() in self.memoria[self.scopePrevio]['variables'].keys():
@@ -564,7 +562,7 @@ class VM:
                 
             #####################################################
             elif self.cuadruplos[self.indice].get_operador() == "print":
-                if (type(self.cuadruplos[self.indice].get_resultado()) == int or type(self.cuadruplos[self.indice].get_resultado()) == float or type(self.cuadruplos[self.indice].get_resultado()) == bool or (self.cuadruplos[self.indice].get_resultado()[:1]=='"' and self.cuadruplos[self.indice].get_resultado()[-1:]=='"')):
+                if (type(self.cuadruplos[self.indice].get_resultado()) == int or type(self.cuadruplos[self.indice].get_resultado()) == float or type(self.cuadruplos[self.indice].get_resultado()) == bool or self.cuadruplos[self.indice].get_operando1() == "True" or self.cuadruplos[self.indice].get_operando1() == "False" or (self.cuadruplos[self.indice].get_resultado()[:1]=='"' and self.cuadruplos[self.indice].get_resultado()[-1:]=='"')):
                     if (self.cuadruplos[self.indice].get_resultado()[:1]=='"' and self.cuadruplos[self.indice].get_resultado()[-1:]=='"'):
                         print(self.cuadruplos[self.indice].get_resultado().strip('"'))
                     else:
